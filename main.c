@@ -3,10 +3,12 @@
 #include <string.h>
 #include <ctype.h>
 
-typedef struct Node Node;
-typedef struct Queue Queue;
 typedef enum TokenType TokenType;
 typedef struct Token Token;
+typedef struct Node Node;
+typedef struct Queue Queue;
+typedef enum NodeType NodeType;
+typedef struct ASTNode ASTNode;
 
 enum TokenType {
 	TOK_INT = 0,
@@ -33,26 +35,59 @@ struct Queue{
 	Node *last;
 	int length;
 };
+enum NodeType{
+	AST_FUNCTION = 0,
+	AST_RETURN,
+	AST_INTLIT,
+	AST_BINARYOP
+};
+struct ASTNode{
+	NodeType type;
+	union {
+		// AST_FUNCTION
+		struct {
+			char *name;
+			ASTNode *body;
+		} Function;
+		// AST_RETURN
+		struct {
+			ASTNode *expression;
+		} ReturnStatement;
+		// AST_INTLIT; that's it, an int
+		int intLit;
+		// AST_BINARYOP; left op right; ej: 2 - 3; 'a' + 'b'; 3 & 10
+		struct BinaryOp{
+			ASTNode *left;
+			ASTNode *right;
+			ASTNode *op;
+		} BinaryOp;
+	};
+};
 
 Token GetNextToken(char **input);
 int TokenPrint(Token token);
 int TokenFree(Token *token);
-int QueuePush(Queue *queue, Token token);
-Token QueuePop(Queue *queue);
-int QueuePrint(Queue queue);
-int QueueFree(Queue *queue);
+int QueuePush(Queue *q, Token token);
+Token QueuePop(Queue *q);
+Token QueuePeek(Queue *q);
+int QueuePrint(Queue q);
+int QueueFree(Queue *q);
+ASTNode *ASTParseExpression(Queue *q);
+ASTNode *ASTParseReturn(Queue *q);
+ASTNode *ASTParseFunction(Queue *q);
 
 int main() {
-	Queue queue = { NULL, NULL, 0 };
+	Queue q1 = { NULL, NULL, 0 };
+	Queue q2 = { NULL, NULL, 0 };
 	char *czy = "int main() { return 0; }";
 	Token token;
 	while (1) {
 		token = GetNextToken(&czy);
 		if (token.type == TOK_EOF) break;
-		QueuePush(&queue, token);
+		QueuePush(&q1, token);
 	}
-	QueuePrint(queue);
-	QueueFree(&queue);
+	QueuePrint(q1);
+	QueueFree(&q1);
 	return 0;
 }
 
@@ -113,70 +148,87 @@ int TokenFree(Token *token) {
 		default: return 0;
 	}
 }
-int QueuePush(Queue *queue, Token token) {
+int TokenExpect(Queue *q, TokenType type) {
+	return QueuePeek(q).type == type;
+}
+int QueuePush(Queue *q, Token token) {
 	Node *node = (Node *) malloc(sizeof(Node));
 	if (node == NULL) return 0;
 
 	node->token = token;
 	node->prev = NULL;
 
-	if (queue->length) {
-		queue->last->prev = node;
-		queue->last = queue->last->prev;
+	if (q->length) {
+		q->last->prev = node;
+		q->last = q->last->prev;
 		node = NULL;
 	}
 	else {
-		queue->first = node;
-		queue->last = node;
+		q->first = node;
+		q->last = node;
 	}
-	queue->length++;
+	q->length++;
 
 	return 1;
 }
-Token QueuePop(Queue *queue) {
+Token QueuePop(Queue *q) {
 	Node *node;
 	Token token;
-	if (queue->length == 0) return (Token) { TOK_EOF, NULL };
+	if (q->length == 0) return (Token) { TOK_EOF, NULL };
 
-	node = queue->first;
-	queue->first = queue->first->prev;
+	node = q->first;
+	q->first = q->first->prev;
 	node->prev = NULL;
-	queue->length--;
+	q->length--;
 
 	token = node->token;
 	free(node);
-	printf("Queue's current size %d.\n", queue->length);
+	printf("Queue's current size %d.\n", q->length);
 
 	return token;
 }
-int QueuePrint(Queue queue) {
+Token QueuePeek(Queue *q) {
+	if (q->length == 0) return (Token) { TOK_EOF, NULL };
+
+	return q->first->token;
+}
+int QueuePrint(Queue q) {
 	int i;
 	Node *node;
-	if (queue.length == 0) return 0;
+	if (q.length == 0) return 0;
 
-	for (i = 0, node = queue.first; i < queue.length; i++, node = node->prev) {
+	for (i = 0, node = q.first; i < q.length; i++, node = node->prev) {
 		TokenPrint(node->token);
 	}
 	node = NULL;
 	return 1;
 }
-int QueueFree(Queue *queue) {
+int QueueFree(Queue *q) {
 	Node *node;
 	Token token;
-	if (queue->length == 0) return 0;
+	if (q->length == 0) return 0;
 
 	int i;
-	int goal = queue->length;
-	queue->last = NULL;
+	int goal = q->length;
+	q->last = NULL;
 	for (i = 0; i < goal; i++) {
-		node = queue->first;
-		queue->first = node->prev;
+		node = q->first;
+		q->first = node->prev;
 		token = node->token;
 		node->prev = NULL;
 		TokenFree(&token);
 		free(node);
 	}
 
-	queue->length = 0;
+	q->length = 0;
 	return 1;
+}
+ASTNode *ASTParseExpression(Queue *q) {
+	if (q->length == 0) return NULL;
+	if (TokenExpect(q, TOK_INTLIT)) {
+		ASTNode *node = (ASTNode *) malloc(sizeof(ASTNode));
+		return node;
+	}
+	fprintf(stderr, "Unexpected token in expression: %s\n", QueuePeek(q).id);
+	exit(1);
 }
