@@ -26,6 +26,7 @@ struct Token {
 
 Token GetNextToken(char **input);
 int PrintToken(Token token);
+int FreeToken(Token *token);
 
 int main() {
 	char *czy = "int main() { return 0; }";
@@ -34,15 +35,7 @@ int main() {
 		token = GetNextToken(&czy);
 		if (token.type == TOK_EOF) break;
 		PrintToken(token);
-		switch (token.type) {
-			case TOK_INT:
-			case TOK_RETURN:
-			case TOK_ID:
-			case TOK_INTLIT:
-				free(token.id);
-				break;
-			default: break;
-		}
+		FreeToken(&token);
 	}
 	return 0;
 }
@@ -51,13 +44,12 @@ Token GetNextToken(char **input) {
 	while (isspace(**input)) (*input)++;
 	if (**input == '\0') return (Token) { .type = TOK_EOF };
 
-	printf("\nTest.\n");
 	switch (**input) {
-		case '(': return (Token) { TOK_OPENPARENTHESIS, "(" };
-		case ')': return (Token) { TOK_CLOSEPARENTHESIS, ")" };
-		case '{': return (Token) { TOK_OPENCURLYBRACES, "{" };
-		case '}': return (Token) { TOK_CLOSECURLYBRACES, "}" };
-		case ';': return (Token) { TOK_SEMICOLON, ";" };
+		case '(': (*input)++; return (Token) { TOK_OPENPARENTHESIS, "(" };
+		case ')': (*input)++; return (Token) { TOK_CLOSEPARENTHESIS, ")" };
+		case '{': (*input)++; return (Token) { TOK_OPENCURLYBRACES, "{" };
+		case '}': (*input)++; return (Token) { TOK_CLOSECURLYBRACES, "}" };
+		case ';': (*input)++; return (Token) { TOK_SEMICOLON, ";" };
 	}
 	
 	if (isalpha(**input)) {
@@ -91,6 +83,17 @@ int PrintToken(Token token) {
 			"TOK_CLOSECURLYBRACES",
 			"TOK_SEMICOLON",
 			"TOK_EOF"};
-	printf("[%s, %s] ", type[(int) token.type] ,token.id);
+	printf("[%s, \"%s\"] ", type[(int) token.type] ,token.id);
 	return 1;
+}
+int FreeToken(Token *token) {
+	switch (token->type) {
+		case TOK_INT:
+		case TOK_RETURN:
+		case TOK_ID:
+		case TOK_INTLIT:
+			free(token->id);
+			return 1;
+		default: 0;
+	}
 }
