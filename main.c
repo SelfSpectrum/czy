@@ -3,9 +3,20 @@
 #include <string.h>
 #include <ctype.h>
 
+typedef struct Node Node;
+typedef struct Queue Queue;
 typedef enum TokenType TokenType;
 typedef struct Token Token;
 
+struct Node {
+	Token *token;
+	Node *prev;
+};
+struct Queue{
+	Node *first;
+	Node *last;
+	int length;
+};
 enum TokenType {
 	TOK_INT = 0,
 	TOK_INTLIT,
@@ -18,25 +29,29 @@ enum TokenType {
 	TOK_SEMICOLON,
 	TOK_EOF
 };
-
 struct Token {
 	TokenType type;
 	char *id;
 };
 
 Token GetNextToken(char **input);
-int PrintToken(Token token);
-int FreeToken(Token *token);
+int TokenPrint(Token token);
+int TokenFree(Token *token);
+int QueuePush(Queue *queue, Token *token);
+Token *QueuePop(Queue *queue);
+int QueueFree(Queue *queue);
 
 int main() {
+	Queue queue = { NULL, NULL, 0 };
 	char *czy = "int main() { return 0; }";
 	Token token;
 	while (1) {
 		token = GetNextToken(&czy);
 		if (token.type == TOK_EOF) break;
-		PrintToken(token);
-		FreeToken(&token);
+		TokenPrint(token);
+		QueuePush(&queue, &token);
 	}
+	QueueFree(&queue);
 	return 0;
 }
 
@@ -71,7 +86,7 @@ Token GetNextToken(char **input) {
 	fprintf(stderr, "Unknown character: %c\n", **input);
 	exit(1);
 }
-int PrintToken(Token token) {
+int TokenPrint(Token token) {
 	if (token.id == NULL) return 0;
 	char *type[] = {"TOK_INT",
 			"TOK_INTLIT",
@@ -86,7 +101,7 @@ int PrintToken(Token token) {
 	printf("[%s, \"%s\"] ", type[(int) token.type] ,token.id);
 	return 1;
 }
-int FreeToken(Token *token) {
+int TokenFree(Token *token) {
 	switch (token->type) {
 		case TOK_INT:
 		case TOK_RETURN:
@@ -94,6 +109,59 @@ int FreeToken(Token *token) {
 		case TOK_INTLIT:
 			free(token->id);
 			return 1;
-		default: 0;
+		default: return 0;
 	}
+}
+int QueuePush(Queue *queue, Token *token) {
+	Node *node = (Node *) malloc(sizeof(Node));
+	if (node == NULL) return 0;
+
+	node->token = token;
+	node->prev = NULL;
+
+	if (queue->length) {
+		queue->last->prev = node;
+		queue->last = queue->last->prev;
+		node = NULL;
+	}
+	else queue->first = queue->last = node;
+	queue->length++;
+
+	return 1;
+}
+Token *QueuePop(Queue *queue) {
+	Node *node;
+	Token *token;
+	if (queue->length == 0) return NULL;
+
+	node = queue->first;
+	queue->first = queue->first->prev;
+	node->prev = NULL;
+	queue->length--;
+
+	token = node->token;
+	node->token = NULL;
+	free(node);
+
+	return token;
+}
+int QueueFree(Queue *queue) {
+	Node *node;
+	Token *token;
+	if (queue->length == 0) return 0;
+
+	int i;
+	int goal = queue->length;
+	queue->last = NULL;
+	for (i = 0; i < goal; i++) {
+		node = queue->first;
+		queue->first = node->prev;
+		token = node->token;
+		node->prev = NULL;
+		node->token = NULL;
+		TokenFree(token);
+		free(node);
+	}
+	queue->length = 0;
+	return 1;
 }
