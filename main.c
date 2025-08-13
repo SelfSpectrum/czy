@@ -12,8 +12,18 @@ typedef struct ASTNode ASTNode;
 
 enum TokenType {
 	TOK_INT = 0,
+	TOK_FLOAT,
+	TOK_CHAR,
+	TOK_VOID,
+	TOK_INTP,
+	TOK_FLOATP,
+	TOK_CHARP,
+	TOK_VOIDP,
 	TOK_INTLIT,
+	TOK_CHARLIT,
+	TOK_FLOATLIT,
 	TOK_ID,
+	TOK_ASSIGN,
 	TOK_RETURN,
 	TOK_OPENPARENTHESIS,
 	TOK_CLOSEPARENTHESIS,
@@ -36,45 +46,56 @@ struct Queue{
 	int length;
 };
 enum NodeType{
-	AST_FUNCTION = 0,
+	AST_EXPRESSION = 0,
 	AST_RETURN,
+	AST_FUNCTION,
 	AST_INTLIT,
+	AST_CHARLIT,
+	AST_FLOATLIT,
 	AST_BINARYOP
 };
 struct ASTNode{
 	NodeType type;
 	union {
-		// AST_FUNCTION
+		// AST_EXPRESSION
 		struct {
+			char *type;
 			char *name;
 			ASTNode *body;
-		} Function;
+		} expression;
 		// AST_RETURN
 		struct {
 			ASTNode *expression;
-		} ReturnStatement;
+		} returnStatement;
 		// AST_INTLIT; that's it, an int
 		int intLit;
+		// AST_CHARLIT; that's it, an char
+		char charLit;
+		// AST_FLOATLIT; that's it, an float
+		float floatLit;
 		// AST_BINARYOP; left op right; ej: 2 - 3; 'a' + 'b'; 3 & 10
 		struct BinaryOp{
 			ASTNode *left;
 			ASTNode *right;
 			ASTNode *op;
-		} BinaryOp;
+		} binaryOp;
 	};
 };
 
 Token GetNextToken(char **input);
 int TokenPrint(Token token);
 int TokenFree(Token *token);
+int TokenExpect(Queue *q, TokenType type);
+int TokenIsType(Queue *q);
 int QueuePush(Queue *q, Token token);
 Token QueuePop(Queue *q);
 Token QueuePeek(Queue *q);
 int QueuePrint(Queue q);
 int QueueFree(Queue *q);
-ASTNode *ASTParseExpression(Queue *q);
-ASTNode *ASTParseReturn(Queue *q);
-ASTNode *ASTParseFunction(Queue *q);
+ASTNode *ASTParseExpression(Queue *q1, Queue *q2);
+ASTNode *ASTParseFunction(Queue *q1, Queue *q2);
+ASTNode *ASTParseValue(Queue *q1, Queue *q2);
+ASTNode *ASTParseReturn(Queue *q1, Queue *q2);
 
 int main() {
 	Queue q1 = { NULL, NULL, 0 };
@@ -125,8 +146,18 @@ Token GetNextToken(char **input) {
 int TokenPrint(Token token) {
 	if (token.id == NULL) return 0;
 	char *type[] = {"TOK_INT",
+			"TOK_FLOAT",
+			"TOK_CHAR",
+			"TOK_VOID",
+			"TOK_INTP",
+			"TOK_FLOATP",
+			"TOK_CHARP",
+			"TOK_VOIDP",
 			"TOK_INTLIT",
+			"TOK_CHARLIT",
+			"TOK_FLOATLIT",
 			"TOK_ID",
+			"TOK_ASSIGN",
 			"TOK_RETURN",
 			"TOK_OPENPARENTHESIS",
 			"TOK_CLOSEPARENTHESIS",
@@ -150,6 +181,18 @@ int TokenFree(Token *token) {
 }
 int TokenExpect(Queue *q, TokenType type) {
 	return QueuePeek(q).type == type;
+}
+int TokenIsType(Queue *q) {
+	switch (q->first->token.type) {
+		case TOK_INT:
+		case TOK_CHAR:
+		case TOK_FLOAT:
+		case TOK_INTP:
+		case TOK_CHARP:
+		case TOK_FLOATP:
+			return 1;
+		default: return 0;
+	}
 }
 int QueuePush(Queue *q, Token token) {
 	Node *node = (Node *) malloc(sizeof(Node));
@@ -223,12 +266,72 @@ int QueueFree(Queue *q) {
 	q->length = 0;
 	return 1;
 }
-ASTNode *ASTParseExpression(Queue *q) {
-	if (q->length == 0) return NULL;
-	if (TokenExpect(q, TOK_INTLIT)) {
-		ASTNode *node = (ASTNode *) malloc(sizeof(ASTNode));
-		return node;
+ASTNode *ASTParseExpression(Queue *q1, Queue *q2) {
+	if (q1->length <= 2) {
+		fprintf(stderr, "Insufficient tokens in expression.\n");
+		exit(1);
 	}
-	fprintf(stderr, "Unexpected token in expression: %s\n", QueuePeek(q).id);
-	exit(1);
+
+	ASTNode *node = (ASTNode *) malloc(sizeof(ASTNode));
+	if (node == NULL) return NULL;
+
+	node->type = AST_EXPRESSION;
+	if (!TokenIsType(q1)) {
+		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", QueuePeek(q1).id);
+		exit(1);
+	}
+	node->expression.type = strdup(QueuePeek(q1).id);
+
+	QueuePush(q2, QueuePop(q1));
+	if (!TokenExpect(q1, TOK_ID)) {
+		fprintf(stderr, "Unexpected token in expression: %s\nAn ID was expected.\n", QueuePeek(q1).id);
+		exit(1);
+	}
+	node->expression.name = strdup(QueuePeek(q1).id);
+
+	QueuePush(q2, QueuePop(q1));
+	return node;
+}
+ASTNode *ASTParseFunction(Queue *q1, Queue *q2) {
+	if (q1->length < 1) {
+		fprintf(stderr, "Insufficient tokens in expression.\n");
+		exit(1);
+	}
+
+	ASTNode *node = (ASTNode *) malloc(sizeof(ASTNode));
+	if (node == NULL) return NULL;
+
+	node->type = AST_FUNCTION;
+	if (!TokenExpect(q1, TOK_OPENPARENTHESIS)) {
+		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", QueuePeek(q1).id);
+		exit(1);
+	}
+	node->expression.type = strdup(QueuePeek(q1).id);
+
+	return node;
+
+}
+ASTNode *ASTParseValue(Queue *q1, Queue *q2) {
+	if (q1->length == 0) {
+		fprintf(stderr, "Insufficient tokens in expression.\n");
+		exit(1);
+	}
+
+	ASTNode *node = (ASTNode *) malloc(sizeof(ASTNode));
+	if (node == NULL) return NULL;
+
+	node->type = AST_INTLIT;
+	node->intLit = atoi(QueuePeek(q1).id);
+	return node;
+}
+ASTNode *ASTParseReturn(Queue *q1, Queue *q2) {
+	if (q1->length == 0) {
+		fprintf(stderr, "Insufficient tokens in expression.\n");
+		exit(1);
+	}
+
+	ASTNode *node = (ASTNode *) malloc(sizeof(ASTNode));
+	if (node == NULL) return NULL;
+
+	return node;
 }
