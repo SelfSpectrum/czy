@@ -5,10 +5,12 @@
 
 typedef enum TokenType TokenType;
 typedef struct Token Token;
-typedef struct Node Node;
-typedef struct Queue Queue;
+typedef struct TokenNode TokenNode;
+typedef struct TokenQueue TokenQueue;
 typedef enum NodeType NodeType;
 typedef struct ASTNode ASTNode;
+typedef struct ASTNodeNode ASTNodeNode;
+typedef struct ASTQueue ASTQueue;
 
 enum TokenType {
 	TOK_INT = 0,
@@ -36,23 +38,27 @@ struct Token {
 	TokenType type;
 	char *id;
 };
-struct Node {
+struct TokenNode {
 	Token token;
-	Node *prev;
+	TokenNode *prev;
 };
-struct Queue{
-	Node *first;
-	Node *last;
+struct TokenQueue{
+	TokenNode *first;
+	TokenNode *last;
 	int length;
 };
 enum NodeType{
 	AST_EXPRESSION = 0,
+	AST_SCOPE,
 	AST_RETURN,
 	AST_FUNCTION,
 	AST_INTLIT,
 	AST_CHARLIT,
 	AST_FLOATLIT,
-	AST_BINARYOP
+	AST_TERNARYOP,
+	AST_BINARYOP,
+	AST_UNARYOP,
+	AST_ERROR
 };
 struct ASTNode{
 	NodeType type;
@@ -81,34 +87,49 @@ struct ASTNode{
 		} binaryOp;
 	};
 };
+struct ASTNodeNode {
+	ASTNode *node;
+	ASTNodeNode *prev;
+};
+struct ASTQueue {
+	ASTNodeNode *first;
+	ASTNodeNode *last;
+	int length;
+};
 
 Token GetNextToken(char **input);
 int TokenPrint(Token token);
 int TokenFree(Token *token);
-int TokenExpect(Queue *q, TokenType type);
-int TokenIsType(Queue *q);
-int QueuePush(Queue *q, Token token);
-Token QueuePop(Queue *q);
-Token QueuePeek(Queue *q);
-int QueuePrint(Queue q);
-int QueueFree(Queue *q);
-ASTNode *ASTParseExpression(Queue *q1, Queue *q2);
-ASTNode *ASTParseFunction(Queue *q1, Queue *q2);
-ASTNode *ASTParseValue(Queue *q1, Queue *q2);
-ASTNode *ASTParseReturn(Queue *q1, Queue *q2);
+int TokenExpect(TokenQueue *q, TokenType type);
+int TokenIsType(TokenQueue *q);
+int TokenQueuePush(TokenQueue *q, Token token);
+Token TokenQueuePop(TokenQueue *q);
+Token TokenQueuePeek(TokenQueue *q);
+int TokenQueuePrint(TokenQueue q);
+int TokenQueueFree(TokenQueue *q);
+ASTNode *ASTParseScope(TokenQueue *q1, TokenQueue *q2);
+ASTNode *ASTParseExpression(TokenQueue *q1, TokenQueue *q2);
+ASTNode *ASTParseFunction(TokenQueue *q1, TokenQueue *q2);
+ASTNode *ASTParseValue(TokenQueue *q1, TokenQueue *q2);
+ASTNode *ASTParseReturn(TokenQueue *q1, TokenQueue *q2);
+void ASTVisualize(ASTNode *node);
+int ASTQueuePush(ASTQueue *q, ASTNode *node);
+ASTNode *ASTQueuePop(ASTQueue *q);
+ASTNode *ASTQueuePeek(ASTQueue *q);
+int ASTQueueFree(TokenQueue *q);
 
 int main() {
-	Queue q1 = { NULL, NULL, 0 };
-	Queue q2 = { NULL, NULL, 0 };
+	TokenQueue q1 = { NULL, NULL, 0 };
+	TokenQueue q2 = { NULL, NULL, 0 };
 	char *czy = "int main() { return 0; }";
 	Token token;
 	while (1) {
 		token = GetNextToken(&czy);
 		if (token.type == TOK_EOF) break;
-		QueuePush(&q1, token);
+		TokenQueuePush(&q1, token);
 	}
-	QueuePrint(q1);
-	QueueFree(&q1);
+	TokenQueuePrint(q1);
+	TokenQueueFree(&q1);
 	return 0;
 }
 
@@ -179,10 +200,10 @@ int TokenFree(Token *token) {
 		default: return 0;
 	}
 }
-int TokenExpect(Queue *q, TokenType type) {
-	return QueuePeek(q).type == type;
+int TokenExpect(TokenQueue *q, TokenType type) {
+	return TokenQueuePeek(q).type == type;
 }
-int TokenIsType(Queue *q) {
+int TokenIsType(TokenQueue *q) {
 	switch (q->first->token.type) {
 		case TOK_INT:
 		case TOK_CHAR:
@@ -194,8 +215,8 @@ int TokenIsType(Queue *q) {
 		default: return 0;
 	}
 }
-int QueuePush(Queue *q, Token token) {
-	Node *node = (Node *) malloc(sizeof(Node));
+int TokenQueuePush(TokenQueue *q, Token token) {
+	TokenNode *node = (TokenNode *) malloc(sizeof(TokenNode));
 	if (node == NULL) return 0;
 
 	node->token = token;
@@ -214,8 +235,8 @@ int QueuePush(Queue *q, Token token) {
 
 	return 1;
 }
-Token QueuePop(Queue *q) {
-	Node *node;
+Token TokenQueuePop(TokenQueue *q) {
+	TokenNode *node;
 	Token token;
 	if (q->length == 0) return (Token) { TOK_EOF, NULL };
 
@@ -226,18 +247,18 @@ Token QueuePop(Queue *q) {
 
 	token = node->token;
 	free(node);
-	printf("Queue's current size %d.\n", q->length);
+	printf("TokenQueue's current size %d.\n", q->length);
 
 	return token;
 }
-Token QueuePeek(Queue *q) {
+Token TokenQueuePeek(TokenQueue *q) {
 	if (q->length == 0) return (Token) { TOK_EOF, NULL };
 
 	return q->first->token;
 }
-int QueuePrint(Queue q) {
+int TokenQueuePrint(TokenQueue q) {
 	int i;
-	Node *node;
+	TokenNode *node;
 	if (q.length == 0) return 0;
 
 	for (i = 0, node = q.first; i < q.length; i++, node = node->prev) {
@@ -246,8 +267,8 @@ int QueuePrint(Queue q) {
 	node = NULL;
 	return 1;
 }
-int QueueFree(Queue *q) {
-	Node *node;
+int TokenQueueFree(TokenQueue *q) {
+	TokenNode *node;
 	Token token;
 	if (q->length == 0) return 0;
 
@@ -266,7 +287,53 @@ int QueueFree(Queue *q) {
 	q->length = 0;
 	return 1;
 }
-ASTNode *ASTParseExpression(Queue *q1, Queue *q2) {
+ASTNode *ASTParseScope(TokenQueue *q1, TokenQueue *q2) {
+	if (q1->length < 2) {
+		fprintf(stderr, "Insufficient tokens in scope.\n");
+		exit(1);
+	}
+
+	ASTNode *node = (ASTNode *) malloc(sizeof(ASTNode));
+	if (node == NULL) return NULL;
+
+	node->type = AST_SCOPE;
+	if (!TokenExpect(q1, TOK_OPENCURLYBRACES)) {
+		fprintf(stderr, "Unexpected token in scope: %s\nAn opening curly brace was expected.\n", TokenQueuePeek(q1).id);
+		exit(1);
+	}
+	TokenQueuePush(q2, TokenQueuePop(q1));
+
+	while (q1->length > 0 && !TokenExpect(q1, TOK_CLOSECURLYBRACES)) {
+		if (TokenExpect(q1, TOK_RETURN)) {
+			node->returnStatement.expression = ASTParseReturn(q1, q2);
+			continue;
+		}
+		else if (TokenIsType(q1)) {
+			node->expression.body = ASTParseExpression(q1, q2);
+			continue;
+		}
+		else if (TokenExpect(q1, TOK_ID)) {
+			node->expression.body = ASTParseFunction(q1, q2);
+			continue;
+		}
+		else if (TokenExpect(q1, TOK_INTLIT)) {
+			node->intLit = ASTParseValue(q1, q2)->intLit;
+			continue;
+		}
+		else {
+			fprintf(stderr, "Unexpected token in scope: %s\n", TokenQueuePeek(q1).id);
+			exit(1);
+		}
+	}
+
+	if (!TokenExpect(q1, TOK_CLOSECURLYBRACES)) {
+		fprintf(stderr, "Unexpected end of scope: %s\nA closing curly brace was expected.\n", TokenQueuePeek(q1).id);
+		exit(1);
+	}
+	
+	return node;
+}
+ASTNode *ASTParseExpression(TokenQueue *q1, TokenQueue *q2) {
 	if (q1->length <= 2) {
 		fprintf(stderr, "Insufficient tokens in expression.\n");
 		exit(1);
@@ -277,22 +344,22 @@ ASTNode *ASTParseExpression(Queue *q1, Queue *q2) {
 
 	node->type = AST_EXPRESSION;
 	if (!TokenIsType(q1)) {
-		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", QueuePeek(q1).id);
+		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", TokenQueuePeek(q1).id);
 		exit(1);
 	}
-	node->expression.type = strdup(QueuePeek(q1).id);
+	node->expression.type = strdup(TokenQueuePeek(q1).id);
 
-	QueuePush(q2, QueuePop(q1));
+	TokenQueuePush(q2, TokenQueuePop(q1));
 	if (!TokenExpect(q1, TOK_ID)) {
-		fprintf(stderr, "Unexpected token in expression: %s\nAn ID was expected.\n", QueuePeek(q1).id);
+		fprintf(stderr, "Unexpected token in expression: %s\nAn ID was expected.\n", TokenQueuePeek(q1).id);
 		exit(1);
 	}
-	node->expression.name = strdup(QueuePeek(q1).id);
+	node->expression.name = strdup(TokenQueuePeek(q1).id);
 
-	QueuePush(q2, QueuePop(q1));
+	TokenQueuePush(q2, TokenQueuePop(q1));
 	return node;
 }
-ASTNode *ASTParseFunction(Queue *q1, Queue *q2) {
+ASTNode *ASTParseFunction(TokenQueue *q1, TokenQueue *q2) {
 	if (q1->length < 1) {
 		fprintf(stderr, "Insufficient tokens in expression.\n");
 		exit(1);
@@ -303,15 +370,15 @@ ASTNode *ASTParseFunction(Queue *q1, Queue *q2) {
 
 	node->type = AST_FUNCTION;
 	if (!TokenExpect(q1, TOK_OPENPARENTHESIS)) {
-		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", QueuePeek(q1).id);
+		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", TokenQueuePeek(q1).id);
 		exit(1);
 	}
-	node->expression.type = strdup(QueuePeek(q1).id);
+	node->expression.type = strdup(TokenQueuePeek(q1).id);
 
 	return node;
 
 }
-ASTNode *ASTParseValue(Queue *q1, Queue *q2) {
+ASTNode *ASTParseValue(TokenQueue *q1, TokenQueue *q2) {
 	if (q1->length == 0) {
 		fprintf(stderr, "Insufficient tokens in expression.\n");
 		exit(1);
@@ -321,10 +388,10 @@ ASTNode *ASTParseValue(Queue *q1, Queue *q2) {
 	if (node == NULL) return NULL;
 
 	node->type = AST_INTLIT;
-	node->intLit = atoi(QueuePeek(q1).id);
+	node->intLit = atoi(TokenQueuePeek(q1).id);
 	return node;
 }
-ASTNode *ASTParseReturn(Queue *q1, Queue *q2) {
+ASTNode *ASTParseReturn(TokenQueue *q1, TokenQueue *q2) {
 	if (q1->length == 0) {
 		fprintf(stderr, "Insufficient tokens in expression.\n");
 		exit(1);
@@ -334,4 +401,62 @@ ASTNode *ASTParseReturn(Queue *q1, Queue *q2) {
 	if (node == NULL) return NULL;
 
 	return node;
+}
+void ASTVisualize(ASTNode *node) {
+
+}
+int ASTQueuePush(ASTQueue *q, ASTNode *node) {
+	ASTNodeNode *temp = (ASTNodeNode *) malloc(sizeof(ASTNodeNode));
+	if (node == NULL) return 0;
+
+	temp->node = node;
+	temp->prev = NULL;
+
+	if (q->length) {
+		q->last->prev = temp;
+		q->last = q->last->prev;
+		temp = NULL;
+	}
+	else {
+		q->first = temp;
+		q->last = temp;
+	}
+	q->length++;
+
+	return 1;
+}
+ASTNode *ASTQueuePop(ASTQueue *q) {
+	ASTNodeNode *temp;
+	ASTNode *node = NULL;
+	if (q->length == 0) return NULL;
+	
+	temp = q->first;
+	q->first = q->first->prev;
+	temp->prev = NULL;
+	q->length--;
+	
+	node = temp->node;
+	free(temp);
+
+	return node;
+}
+int ASTQueueFree(ASTQueue *q) {
+	ASTNodeNode *node;
+	ASTNode *astNode;
+	if (q->length == 0) return 0;
+
+	int i;
+	int goal = q->length;
+	q->last = NULL;
+	for (i = 0; i < goal; i++) {
+		node = q->first;
+		q->first = node->prev;
+		astNode = node->node;
+		node->prev = NULL;
+		free(astNode);
+		free(node);
+	}
+
+	q->length = 0;
+	return 1;
 }
