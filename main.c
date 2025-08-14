@@ -2,11 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "dataStructures.h"
 
-typedef enum TokenType TokenType;
 typedef struct Token Token;
-typedef struct TokenNode TokenNode;
-typedef struct TokenQueue TokenQueue;
+typedef enum TokenType TokenType;
 typedef enum NodeType NodeType;
 typedef struct ASTNode ASTNode;
 typedef struct ASTNodeNode ASTNodeNode;
@@ -38,15 +37,6 @@ struct Token {
 	TokenType type;
 	char *id;
 };
-struct TokenNode {
-	Token token;
-	TokenNode *prev;
-};
-struct TokenQueue{
-	TokenNode *first;
-	TokenNode *last;
-	int length;
-};
 enum NodeType{
 	AST_EXPRESSION = 0,
 	AST_SCOPE,
@@ -69,6 +59,10 @@ struct ASTNode{
 			char *name;
 			ASTNode *body;
 		} expression;
+		// AST_SCOPE
+		struct {
+			ASTQueue *body;
+		} scope;
 		// AST_RETURN
 		struct {
 			ASTNode *expression;
@@ -80,11 +74,22 @@ struct ASTNode{
 		// AST_FLOATLIT; that's it, an float
 		float floatLit;
 		// AST_BINARYOP; left op right; ej: 2 - 3; 'a' + 'b'; 3 & 10
-		struct BinaryOp{
+		struct {
 			ASTNode *left;
 			ASTNode *right;
 			ASTNode *op;
 		} binaryOp;
+		// AST_UNARYOP; op value; ej: -2; !true; ~0xFF
+		struct unaryOp {
+			ASTNode *value;
+			ASTNode *op;
+		} unaryOp;
+		// AST_TERNARYOP; condition ? true : false; ej: 2 > 3 ? 4 : 5
+		struct {
+			ASTNode *condition;
+			ASTNode *trueValue;
+			ASTNode *falseValue;
+		} ternaryOp;
 	};
 };
 struct ASTNodeNode {
@@ -102,11 +107,6 @@ int TokenPrint(Token token);
 int TokenFree(Token *token);
 int TokenExpect(TokenQueue *q, TokenType type);
 int TokenIsType(TokenQueue *q);
-int TokenQueuePush(TokenQueue *q, Token token);
-Token TokenQueuePop(TokenQueue *q);
-Token TokenQueuePeek(TokenQueue *q);
-int TokenQueuePrint(TokenQueue q);
-int TokenQueueFree(TokenQueue *q);
 ASTNode *ASTParseScope(TokenQueue *q1, TokenQueue *q2);
 ASTNode *ASTParseExpression(TokenQueue *q1, TokenQueue *q2);
 ASTNode *ASTParseFunction(TokenQueue *q1, TokenQueue *q2);
@@ -116,7 +116,7 @@ void ASTVisualize(ASTNode *node);
 int ASTQueuePush(ASTQueue *q, ASTNode *node);
 ASTNode *ASTQueuePop(ASTQueue *q);
 ASTNode *ASTQueuePeek(ASTQueue *q);
-int ASTQueueFree(TokenQueue *q);
+int ASTQueueFree(ASTQueue *q);
 
 int main() {
 	TokenQueue q1 = { NULL, NULL, 0 };
@@ -214,78 +214,6 @@ int TokenIsType(TokenQueue *q) {
 			return 1;
 		default: return 0;
 	}
-}
-int TokenQueuePush(TokenQueue *q, Token token) {
-	TokenNode *node = (TokenNode *) malloc(sizeof(TokenNode));
-	if (node == NULL) return 0;
-
-	node->token = token;
-	node->prev = NULL;
-
-	if (q->length) {
-		q->last->prev = node;
-		q->last = q->last->prev;
-		node = NULL;
-	}
-	else {
-		q->first = node;
-		q->last = node;
-	}
-	q->length++;
-
-	return 1;
-}
-Token TokenQueuePop(TokenQueue *q) {
-	TokenNode *node;
-	Token token;
-	if (q->length == 0) return (Token) { TOK_EOF, NULL };
-
-	node = q->first;
-	q->first = q->first->prev;
-	node->prev = NULL;
-	q->length--;
-
-	token = node->token;
-	free(node);
-	printf("TokenQueue's current size %d.\n", q->length);
-
-	return token;
-}
-Token TokenQueuePeek(TokenQueue *q) {
-	if (q->length == 0) return (Token) { TOK_EOF, NULL };
-
-	return q->first->token;
-}
-int TokenQueuePrint(TokenQueue q) {
-	int i;
-	TokenNode *node;
-	if (q.length == 0) return 0;
-
-	for (i = 0, node = q.first; i < q.length; i++, node = node->prev) {
-		TokenPrint(node->token);
-	}
-	node = NULL;
-	return 1;
-}
-int TokenQueueFree(TokenQueue *q) {
-	TokenNode *node;
-	Token token;
-	if (q->length == 0) return 0;
-
-	int i;
-	int goal = q->length;
-	q->last = NULL;
-	for (i = 0; i < goal; i++) {
-		node = q->first;
-		q->first = node->prev;
-		token = node->token;
-		node->prev = NULL;
-		TokenFree(&token);
-		free(node);
-	}
-
-	q->length = 0;
-	return 1;
 }
 ASTNode *ASTParseScope(TokenQueue *q1, TokenQueue *q2) {
 	if (q1->length < 2) {
