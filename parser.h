@@ -4,6 +4,7 @@
 #include "lexer.h"
 
 typedef struct ASTNode ASTNode;
+typedef enum NodeType NodeType;
 typedef struct ASTNodeNode ASTNodeNode;
 typedef struct ASTQueue ASTQueue;
 
@@ -33,6 +34,7 @@ struct ASTNode{
 		struct {
 			ASTQueue *body;
 		} scope;
+		// AST_FUNCTION
 		// AST_RETURN
 		struct {
 			ASTNode *expression;
@@ -77,6 +79,7 @@ ASTNode *ASTParseExpression(TokenQueue *q1, TokenQueue *q2);
 ASTNode *ASTParseFunction(TokenQueue *q1, TokenQueue *q2);
 ASTNode *ASTParseValue(TokenQueue *q1, TokenQueue *q2);
 ASTNode *ASTParseReturn(TokenQueue *q1, TokenQueue *q2);
+int ASTNodeFree(ASTNode **node);
 void ASTVisualize(ASTNode *node);
 int ASTQueuePush(ASTQueue *q, ASTNode *node);
 ASTNode *ASTQueuePop(ASTQueue *q);

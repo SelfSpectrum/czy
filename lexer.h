@@ -8,7 +8,6 @@
 
 typedef struct Token Token;
 typedef enum TokenType TokenType;
-typedef enum NodeType NodeType;
 typedef struct TokenNode TokenNode;
 typedef struct TokenQueue TokenQueue;
 

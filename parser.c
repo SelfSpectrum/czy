@@ -73,7 +73,7 @@ ASTNode *ASTParseExpression(TokenQueue *q1, TokenQueue *q2) {
 	return node;
 }
 ASTNode *ASTParseFunction(TokenQueue *q1, TokenQueue *q2) {
-	if (q1->length < 1) {
+	if (q1->length <= 1) {
 		fprintf(stderr, "Insufficient tokens in expression.\n");
 		exit(1);
 	}
@@ -114,6 +114,47 @@ ASTNode *ASTParseReturn(TokenQueue *q1, TokenQueue *q2) {
 	if (node == NULL) return NULL;
 
 	return node;
+}
+int ASTNodeFree(ASTNode **node) {
+	if (node == NULL) return 0;
+
+	NodeType type = (*node)->type;
+	switch (type) {
+		case AST_EXPRESSION:
+			free((*node)->expression.type);
+			free((*node)->expression.name);
+			ASTNodeFree(&(*node)->expression.body);
+			free(*node);
+			*node = NULL;
+			break;
+		case AST_SCOPE:
+			break;
+		case AST_RETURN:
+			ASTNodeFree(&(*node)->returnStatement.body);
+			free(*node);
+			*node = NULL;
+			break;
+		case AST_FUNCTION:
+			break;
+		case AST_INTLIT:
+		case AST_CHARLIT:
+		case AST_FLOATLIT:
+			free(*node);
+			*node = NULL;
+			break;
+		case AST_TERNARYOP:
+			break;
+		case AST_BINARYOP:
+			break;
+		case AST_UNARYOP:
+			break;
+		case AST_ERROR:
+			break;
+		default:
+			fprintf(stderr, "Insufficient tokens in expression.\n");
+			exit(1);
+			break;
+	}
 }
 void ASTVisualize(ASTNode *node) {
 
@@ -166,7 +207,8 @@ int ASTQueueFree(ASTQueue *q) {
 		q->first = node->prev;
 		astNode = node->node;
 		node->prev = NULL;
-		free(astNode);
+		node->node = NULL;
+		ASTNodeFree(&astNode);
 		free(node);
 	}
 
