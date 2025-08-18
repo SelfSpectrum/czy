@@ -143,6 +143,7 @@ int ASTNodeFree(ASTNode **node) {
 			*node = NULL;
 			break;
 		case AST_TERNARYOP:
+			
 			break;
 		case AST_BINARYOP:
 			break;

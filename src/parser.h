@@ -16,6 +16,7 @@ enum NodeType{
 	AST_INTLIT,
 	AST_CHARLIT,
 	AST_FLOATLIT,
+	AST_STRINGLIT,
 	AST_TERNARYOP,
 	AST_BINARYOP,
 	AST_UNARYOP,
@@ -45,6 +46,8 @@ struct ASTNode{
 		char charLit;
 		// AST_FLOATLIT; that's it, an float
 		float floatLit;
+		// AST_STRINGLIT; I'm gonna
+		char *stringLit;
 		// AST_BINARYOP; left op right; ej: 2 - 3; 'a' + 'b'; 3 & 10
 		struct {
 			ASTNode *left;
