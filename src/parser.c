@@ -143,11 +143,24 @@ int ASTNodeFree(ASTNode **node) {
 			*node = NULL;
 			break;
 		case AST_TERNARYOP:
-			
+			ASTNodeFree(&(*node)->ternaryOp.condition);
+			ASTNodeFree(&(*node)->ternaryOp.trueValue);
+			ASTNodeFree(&(*node)->ternaryOp.falseValue);
+			free(*node);
+			*node = NULL;
 			break;
 		case AST_BINARYOP:
+			ASTNodeFree(&(*node)->binaryOp.left);
+			ASTNodeFree(&(*node)->binaryOp.right);
+			ASTNodeFree(&(*node)->binaryOp.op);
+			free(*node);
+			*node = NULL;
 			break;
 		case AST_UNARYOP:
+			ASTNodeFree(&(*node)->unaryOp.value);
+			ASTNodeFree(&(*node)->unaryOp.op);
+			free(*node);
+			*node = NULL;
 			break;
 		case AST_ERROR:
 			break;
@@ -159,6 +172,43 @@ int ASTNodeFree(ASTNode **node) {
 }
 void ASTVisualize(ASTNode *node) {
 
+}
+void ASTParseNode(ASTNode **node, TokenQueue *q1, TokenQueue *q2) {
+	if (*node == NULL || q1 == NULL || q2 == NULL) {
+		fprintf(stderr, "Invalid parameters for ASTParseNode.\n");
+		exit(1);
+	}
+	TokenNode *current;
+	int i;
+	int length = q1->length;
+	for (i = 0, current = q1->first; i < length; i++, current = current->prev) {
+		if (current == NULL) continue;
+		switch (current->token.type) {
+			case TOK_ID:
+				node->expression.name = strdup(current->token.id);
+				break;
+			case TOK_INTLIT:
+				node->intLit = atoi(current->token.id);
+				break;
+			case TOK_FLOATLIT:
+				node->floatLit = atof(current->token.id);
+				break;
+			case TOK_STRINGLIT:
+				node->stringLit = strdup(current->token.id);
+				break;
+			case TOK_CHARLIT:
+				node->charLit = current->token.id[0];
+				break;
+			case TOK_RETURN:
+				*node = ASTParseReturn(q1, q2);
+				break;
+			case TOK_OPENCURLYBRACES:
+				*node = ASTParseScope(q1, q2);
+				break;
+			default:
+				break;
+		}
+	}
 }
 int ASTQueuePush(ASTQueue *q, ASTNode *node) {
 	ASTNodeNode *temp = (ASTNodeNode *) malloc(sizeof(ASTNodeNode));

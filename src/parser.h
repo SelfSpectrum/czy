@@ -48,6 +48,12 @@ struct ASTNode{
 		float floatLit;
 		// AST_STRINGLIT; I'm gonna
 		char *stringLit;
+		// AST_TERNARYOP; condition ? true : false; ej: 2 > 3 ? 4 : 5
+		struct {
+			ASTNode *condition;
+			ASTNode *trueValue;
+			ASTNode *falseValue;
+		} ternaryOp;
 		// AST_BINARYOP; left op right; ej: 2 - 3; 'a' + 'b'; 3 & 10
 		struct {
 			ASTNode *left;
@@ -59,12 +65,6 @@ struct ASTNode{
 			ASTNode *value;
 			ASTNode *op;
 		} unaryOp;
-		// AST_TERNARYOP; condition ? true : false; ej: 2 > 3 ? 4 : 5
-		struct {
-			ASTNode *condition;
-			ASTNode *trueValue;
-			ASTNode *falseValue;
-		} ternaryOp;
 	};
 };
 struct ASTNodeNode {
@@ -84,6 +84,7 @@ ASTNode *ASTParseValue(TokenQueue *q1, TokenQueue *q2);
 ASTNode *ASTParseReturn(TokenQueue *q1, TokenQueue *q2);
 int ASTNodeFree(ASTNode **node);
 void ASTVisualize(ASTNode *node);
+void ASTParseNode(ASTNode *node, TokenQueue *q1, TokenQueue *q2);
 int ASTQueuePush(ASTQueue *q, ASTNode *node);
 ASTNode *ASTQueuePop(ASTQueue *q);
 ASTNode *ASTQueuePeek(ASTQueue *q);
