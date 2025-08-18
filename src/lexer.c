@@ -1,7 +1,60 @@
 #include "lexer.h"
 
-Token GetNextToken(char **input) {
-	while (isspace(**input)) (*input)++;
+// Helper function to check for keywords
+static bool is_keyword(const char *str) {
+	static const char *keywords[] = {"int", "float", "char",
+					 "void", "double", "short",
+					 "long", "signed", "unsigned",
+					 "return", "if", "else",
+					 "while", "for", "do",
+					 "switch", "case", "default",
+					 "break", "continue", "typedef",
+					 "struct", "union","enum",
+					 "sizeof", NULL};
+	for (const char **kw = keywords; *kw; kw++) {
+		if (strcmp(str, *kw) == 0) return true;
+	}
+	return false;
+}
+
+// Helper function to convert keyword to token type
+static TokenType keyword_to_token_type(const char *str) {
+	if (strcmp(str, "int") == 0) return TOK_INT;
+	if (strcmp(str, "float") == 0) return TOK_FLOAT;
+	if (strcmp(str, "char") == 0) return TOK_CHAR;
+	if (strcmp(str, "void") == 0) return TOK_VOID;
+	if (strcmp(str, "double") == 0) return TOK_DOUBLE;
+	if (strcmp(str, "short") == 0) return TOK_SHORT;
+	if (strcmp(str, "long") == 0) return TOK_LONG;
+	if (strcmp(str, "signed") == 0) return TOK_SIGNED;
+	if (strcmp(str, "unsigned") == 0) return TOK_UNSIGNED;
+	if (strcmp(str, "return") == 0) return TOK_RETURN;
+	if (strcmp(str, "if") == 0) return TOK_IF;
+	if (strcmp(str, "else") == 0) return TOK_ELSE;
+	if (strcmp(str, "while") == 0) return TOK_WHILE;
+	if (strcmp(str, "for") == 0) return TOK_FOR;
+	if (strcmp(str, "do") == 0) return TOK_DO;
+	if (strcmp(str, "switch") == 0) return TOK_SWITCH;
+	if (strcmp(str, "case") == 0) return TOK_CASE;
+	if (strcmp(str, "default") == 0) return TOK_DEFAULT;
+	if (strcmp(str, "break") == 0) return TOK_BREAK;
+	if (strcmp(str, "continue") == 0) return TOK_CONTINUE;
+	if (strcmp(str, "typedef") == 0) return TOK_TYPEDEF;
+	if (strcmp(str, "struct") == 0) return TOK_STRUCT;
+	if (strcmp(str, "union") == 0) return TOK_UNION;
+	if (strcmp(str, "enum") == 0) return TOK_ENUM;
+	if (strcmp(str, "sizeof") == 0) return TOK_SIZEOF;
+	return TOK_ID;
+}
+Token GetNextToken(char **input, int *line, int *column) {
+	while (isspace(**input)) {
+		if (**input == '\n') {
+			(*line)++;
+			*column = 0;
+		}
+		else (*column)++;
+		(*input)++;
+	}
 	if (**input == '\0') return (Token) { .type = TOK_EOF };
 
 	switch (**input) {
@@ -33,26 +86,7 @@ Token GetNextToken(char **input) {
 }
 int TokenPrint(Token token) {
 	if (token.id == NULL) return 0;
-	char *type[] = {"TOK_INT",
-			"TOK_FLOAT",
-			"TOK_CHAR",
-			"TOK_VOID",
-			"TOK_INTP",
-			"TOK_FLOATP",
-			"TOK_CHARP",
-			"TOK_VOIDP",
-			"TOK_INTLIT",
-			"TOK_CHARLIT",
-			"TOK_FLOATLIT",
-			"TOK_ID",
-			"TOK_ASSIGN",
-			"TOK_RETURN",
-			"TOK_OPENPARENTHESIS",
-			"TOK_CLOSEPARENTHESIS",
-			"TOK_OPENCURLYBRACES",
-			"TOK_CLOSECURLYBRACES",
-			"TOK_SEMICOLON",
-			"TOK_EOF"};
+	static const char *type[] = {};
 	printf("[%s, \"%s\"] ", type[(int) token.type] ,token.id);
 	return 1;
 }
