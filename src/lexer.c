@@ -1,32 +1,33 @@
 #include "lexer.h"
 
 TokenType TokenTypeParseString(const char *str) {
-	if (strcmp(str, "int") == 0) return TOK_INT;
-	if (strcmp(str, "float") == 0) return TOK_FLOAT;
-	if (strcmp(str, "char") == 0) return TOK_CHAR;
-	if (strcmp(str, "void") == 0) return TOK_VOID;
-	if (strcmp(str, "double") == 0) return TOK_DOUBLE;
-	if (strcmp(str, "short") == 0) return TOK_SHORT;
-	if (strcmp(str, "long") == 0) return TOK_LONG;
-	if (strcmp(str, "signed") == 0) return TOK_SIGNED;
-	if (strcmp(str, "unsigned") == 0) return TOK_UNSIGNED;
-	if (strcmp(str, "return") == 0) return TOK_RETURN;
-	if (strcmp(str, "if") == 0) return TOK_IF;
-	if (strcmp(str, "else") == 0) return TOK_ELSE;
-	if (strcmp(str, "while") == 0) return TOK_WHILE;
-	if (strcmp(str, "for") == 0) return TOK_FOR;
-	if (strcmp(str, "do") == 0) return TOK_DO;
-	if (strcmp(str, "switch") == 0) return TOK_SWITCH;
-	if (strcmp(str, "case") == 0) return TOK_CASE;
-	if (strcmp(str, "default") == 0) return TOK_DEFAULT;
-	if (strcmp(str, "break") == 0) return TOK_BREAK;
-	if (strcmp(str, "continue") == 0) return TOK_CONTINUE;
-	if (strcmp(str, "typedef") == 0) return TOK_TYPEDEF;
-	if (strcmp(str, "struct") == 0) return TOK_STRUCT;
-	if (strcmp(str, "union") == 0) return TOK_UNION;
-	if (strcmp(str, "enum") == 0) return TOK_ENUM;
-	if (strcmp(str, "sizeof") == 0) return TOK_SIZEOF;
-	return TOK_ID;
+	if (strcmp(str, "int") == 0)		return TOK_INT;
+	if (strcmp(str, "float") == 0)		return TOK_FLOAT;
+	if (strcmp(str, "char") == 0)		return TOK_CHAR;
+	if (strcmp(str, "void") == 0)		return TOK_VOID;
+	if (strcmp(str, "double") == 0)		return TOK_DOUBLE;
+	if (strcmp(str, "short") == 0)		return TOK_SHORT;
+	if (strcmp(str, "long") == 0)		return TOK_LONG;
+	if (strcmp(str, "signed") == 0)		return TOK_SIGNED;
+	if (strcmp(str, "unsigned") == 0)	return TOK_UNSIGNED;
+	if (strcmp(str, "return") == 0)		return TOK_RETURN;
+	if (strcmp(str, "if") == 0)		return TOK_IF;
+	if (strcmp(str, "else") == 0)		return TOK_ELSE;
+	if (strcmp(str, "while") == 0)		return TOK_WHILE;
+	if (strcmp(str, "for") == 0)		return TOK_FOR;
+	if (strcmp(str, "do") == 0)		return TOK_DO;
+	if (strcmp(str, "switch") == 0)		return TOK_SWITCH;
+	if (strcmp(str, "case") == 0)		return TOK_CASE;
+	if (strcmp(str, "default") == 0)	return TOK_DEFAULT;
+	if (strcmp(str, "break") == 0)		return TOK_BREAK;
+	if (strcmp(str, "continue") == 0)	return TOK_CONTINUE;
+	if (strcmp(str, "typedef") == 0)	return TOK_TYPEDEF;
+	if (strcmp(str, "struct") == 0)		return TOK_STRUCT;
+	if (strcmp(str, "union") == 0)		return TOK_UNION;
+	if (strcmp(str, "enum") == 0)		return TOK_ENUM;
+	if (strcmp(str, "sizeof") == 0)		return TOK_SIZEOF;
+
+						return TOK_ID;
 }
 Token GetNextToken(char **input, int *line, int *column) {
 	// Ignore whitespace and track line/column numbers
@@ -160,8 +161,101 @@ Token GetNextToken(char **input, int *line, int *column) {
 	// Handle numeric literals
 	if (isdigit(**input)) {
 		char *start = *input;
-		while (isdigit(**input)) (*input)++;
-		return (Token) { TOK_INTLIT, strndup(start, *input - start) };
+		int startColumn = *column;
+		bool floatingPoint = false;
+		bool hexadecimal = false;
+		bool floatSuffix = false;
+		bool longSuffix = false;
+
+		// Check for hexadecimal literals
+		if (**input == '0' && ((*input)[1] == 'x' || (*input)[1] == 'X')) {
+			// Hexadecimal part
+			hexadecimal = true;
+			(*input) += 2;
+			(*column) += 2;
+			while (isxdigit(**input)) {
+				(*input)++;
+				(*column)++;
+			}
+		}
+		else {
+			// Integer part
+			while (isdigit(**input)) {
+				(*input)++;
+				(*column)++;
+			}
+		}
+
+		// Check for floating point
+		if (**input == '.') {
+			floatingPoint = true;
+			(*input)++;
+			(*column)++;
+			while (isdigit(**input)) {
+				(*input)++;
+				(*column)++;
+			}
+		}
+
+		// Check for exponent part
+		if (hexadecimal && (**input == 'p' || **input == 'P')) {
+			floatingPoint = true;
+			(*input)++;
+			(*column)++;
+			if (**input == '+' || **input == '-') {
+				(*input)++;
+				(*column)++;
+			}
+			if (!isdigit(**input)) {
+				fprintf(stderr, "Invalid hexadecimal floating-point literal at line %d, column %d\n", *line, *column);
+				exit(1);
+			}
+			while (isdigit(**input)) {
+				(*input)++;
+				(*column)++;
+			}
+		}
+		else if (!hexadecimal && ( **input == 'e' || **input == 'E')) {
+			floatingPoint = true;
+			(*input)++;
+			(*column)++;
+			if (**input == '+' || **input == '-') {
+				(*input)++;
+				(*column)++;
+			}
+			if (!isdigit(**input)) {
+				fprintf(stderr, "Invalid floating-point literal at line %d, column %d\n", *line, *column);
+				exit(1);
+			}
+			while (isdigit(**input)) {
+				(*input)++;
+				(*column)++;
+			}
+		}
+
+		// Check for suffix part
+		if (**input == 'f' || **input == 'F') {
+			floatSuffix = true;
+			(*input)++;
+			(*column)++;
+		}
+		else if (**input == 'l' || **input == 'L') {
+			longSuffix = true;
+			(*input)++;
+			(*column)++;
+		}
+
+		size_t length = *input - start;
+		char *value = strndup(start, length);
+		TokenType type;
+		if (floatingPoint) {
+			if (floatSuffix) type = TOK_FLOATLIT;
+			else if (longSuffix) type = TOK_LONGDOUBLELIT;
+			else type = TOK_DOUBLELIT;
+		}
+		else type = TOK_INTLIT;
+		
+		return (Token) { type, value, *line, startColumn };
 	}
 
 	fprintf(stderr, "Unknown character: %c\n", **input);
@@ -179,13 +273,17 @@ bool TokenPrint(Token token) {
 					"TOK_SIGNED",
 					"TOK_UNSIGNED",
 					"TOK_INTP",
-					"TOK_FLOATP",
 					"TOK_CHARP",
+					"TOK_FLOATP",
+					"TOK_DOUBLELITP",
+					"TOK_LONGDOUBLELITP",
 					"TOK_VOIDP",
 					"TOK_DOUBLEP",
 					"TOK_INTLIT",
 					"TOK_CHARLIT",
 					"TOK_FLOATLIT",
+					"TOK_DOUBLELIT",
+					"TOK_LONGDOUBLELIT",
 					"TOK_STRINGLIT",
 					"TOK_ID",
 					"TOK_RETURN",
@@ -263,8 +361,9 @@ bool TokenIsDataType(TokenQueue *q) {
 		case TOK_INT:
 		case TOK_CHAR:
 		case TOK_FLOAT:
-		case TOK_VOID:
 		case TOK_DOUBLE:
+		case TOK_LONGDOUBLE:
+		case TOK_VOID:
 		case TOK_SHORT:
 		case TOK_LONG:
 		case TOK_SIGNED:
