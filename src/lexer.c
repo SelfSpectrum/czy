@@ -1,24 +1,6 @@
 #include "lexer.h"
 
-// Helper function to check for keywords
-static bool is_keyword(const char *str) {
-	static const char *keywords[] = {"int", "float", "char",
-					 "void", "double", "short",
-					 "long", "signed", "unsigned",
-					 "return", "if", "else",
-					 "while", "for", "do",
-					 "switch", "case", "default",
-					 "break", "continue", "typedef",
-					 "struct", "union","enum",
-					 "sizeof", NULL};
-	for (const char **kw = keywords; *kw; kw++) {
-		if (strcmp(str, *kw) == 0) return true;
-	}
-	return false;
-}
-
-// Helper function to convert keyword to token type
-static TokenType keyword_to_token_type(const char *str) {
+TokenType TokenTypeParseString(const char *str) {
 	if (strcmp(str, "int") == 0) return TOK_INT;
 	if (strcmp(str, "float") == 0) return TOK_FLOAT;
 	if (strcmp(str, "char") == 0) return TOK_CHAR;
@@ -84,41 +66,148 @@ Token GetNextToken(char **input, int *line, int *column) {
 	fprintf(stderr, "Unknown character: %c\n", **input);
 	exit(1);
 }
-int TokenPrint(Token token) {
-	if (token.id == NULL) return 0;
-	static const char *type[] = {};
+bool TokenPrint(Token token) {
+	if (token.id == NULL) return false;
+	static const char *type[] = {   "TOK_INT",
+					"TOK_FLOAT",
+					"TOK_CHAR",
+					"TOK_VOID",
+					"TOK_DOUBLE",
+					"TOK_SHORT",
+					"TOK_LONG",
+					"TOK_SIGNED",
+					"TOK_UNSIGNED",
+					"TOK_INTP",
+					"TOK_FLOATP",
+					"TOK_CHARP",
+					"TOK_VOIDP",
+					"TOK_DOUBLEP",
+					"TOK_INTLIT",
+					"TOK_CHARLIT",
+					"TOK_FLOATLIT",
+					"TOK_STRINGLIT",
+					"TOK_ID",
+					"TOK_RETURN",
+					"TOK_IF",
+					"TOK_ELSE",
+					"TOK_WHILE",
+					"TOK_FOR",
+					"TOK_DO",
+					"TOK_SWITCH",
+					"TOK_CASE",
+					"TOK_DEFAULT",
+					"TOK_BREAK",
+					"TOK_CONTINUE",
+					"TOK_TYPEDEF",
+					"TOK_STRUCT",
+					"TOK_UNION",
+					"TOK_ENUM",
+					"TOK_SIZEOF",
+					"TOK_ASSIGN",
+					"TOK_PLUS",
+					"TOK_MINUS",
+					"TOK_STAR",
+					"TOK_SLASH",
+					"TOK_PERCENT",
+					"TOK_PLUSPLUS",
+					"TOK_MINUSMINUS",
+					"TOK_ARROW",
+					"TOK_DOT",
+					"TOK_EQUAL",
+					"TOK_NOTEQUAL",
+					"TOK_LESSERTHAN",
+					"TOK_GREATERTHAN",
+					"TOK_LESSEROREQUAL",
+					"TOK_GREATEROREQUAL",
+					"TOK_AND",
+					"TOK_OR",
+					"TOK_NOT",
+					"TOK_BITAND",
+					"TOK_BITOR",
+					"TOK_BITNOT",
+					"TOK_XOR",
+					"TOK_LSHIFT",
+					"TOK_RSHIFT",
+					"TOK_OPENPARENTHESIS",
+					"TOK_CLOSEPARENTHESIS",
+					"TOK_OPENCURLYBRACES",
+					"TOK_CLOSECURLYBRACES",
+					"TOK_OPENBRACKET",
+					"TOK_CLOSEBRACKET",
+					"TOK_SEMICOLON",
+					"TOK_COLON",
+					"TOK_COMMA",
+					"TOK_QUESTION",
+					"TOK_EOF",
+					"TOK_ERROR" };
 	printf("[%s, \"%s\"] ", type[(int) token.type] ,token.id);
-	return 1;
+	return true;
 }
-int TokenFree(Token *token) {
+bool TokenFree(Token *token) {
 	switch (token->type) {
 		case TOK_INT:
 		case TOK_RETURN:
 		case TOK_ID:
 		case TOK_INTLIT:
 			free(token->id);
-			return 1;
-		default: return 0;
+			return true;
+		default: return false;
 	}
 }
-int TokenExpect(TokenQueue *q, TokenType type) {
+bool TokenExpect(TokenQueue *q, TokenType type) {
 	return TokenQueuePeek(q).type == type;
 }
-int TokenIsType(TokenQueue *q) {
+bool TokenIsDataType(TokenQueue *q) {
 	switch (q->first->token.type) {
 		case TOK_INT:
 		case TOK_CHAR:
 		case TOK_FLOAT:
-		case TOK_INTP:
-		case TOK_CHARP:
-		case TOK_FLOATP:
-			return 1;
-		default: return 0;
+		case TOK_VOID:
+		case TOK_DOUBLE:
+		case TOK_SHORT:
+		case TOK_LONG:
+		case TOK_SIGNED:
+		case TOK_UNSIGNED:
+			return true;
+		default: return false;
 	}
 }
-int TokenQueuePush(TokenQueue *q, Token token) {
+bool TokenIsKeyword(const char *str) {
+	static const char *keywords[] = {"int",
+					 "float",
+					 "char",
+					 "void",
+					 "double",
+					 "short",
+					 "long",
+					 "signed",
+					 "unsigned",
+					 "return",
+					 "if",
+					 "else",
+					 "while",
+					 "for",
+					 "do",
+					 "switch",
+					 "case",
+					 "default",
+					 "break",
+					 "continue",
+					 "typedef",
+					 "struct",
+					 "union",
+					 "enum",
+					 "sizeof",
+					 NULL};
+	for (const char **kw = keywords; *kw; kw++) {
+		if (strcmp(str, *kw) == 0) return true;
+	}
+	return false;
+}
+
+bool TokenQueuePush(TokenQueue *q, Token token) {
 	TokenNode *node = (TokenNode *) malloc(sizeof(TokenNode));
-	if (node == NULL) return 0;
+	if (node == NULL) return false;
 
 	node->token = token;
 	node->prev = NULL;
@@ -134,7 +223,7 @@ int TokenQueuePush(TokenQueue *q, Token token) {
 	}
 	q->length++;
 
-	return 1;
+	return true;
 }
 Token TokenQueuePop(TokenQueue *q) {
 	TokenNode *node;
@@ -157,21 +246,21 @@ Token TokenQueuePeek(TokenQueue *q) {
 
 	return q->first->token;
 }
-int TokenQueuePrint(TokenQueue q) {
+bool TokenQueuePrint(TokenQueue q) {
 	int i;
 	TokenNode *node;
-	if (q.length == 0) return 0;
+	if (q.length == 0) return false;
 
 	for (i = 0, node = q.first; i < q.length; i++, node = node->prev) {
 		TokenPrint(node->token);
 	}
 	node = NULL;
-	return 1;
+	return true;
 }
-int TokenQueueFree(TokenQueue *q) {
+bool TokenQueueFree(TokenQueue *q) {
 	TokenNode *node;
 	Token token;
-	if (q->length == 0) return 0;
+	if (q->length == 0) return false;
 
 	int i;
 	int goal = q->length;
@@ -186,5 +275,5 @@ int TokenQueueFree(TokenQueue *q) {
 	}
 
 	q->length = 0;
-	return 1;
+	return false;
 }
