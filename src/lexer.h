@@ -38,7 +38,7 @@ typedef enum TokenType {
 	TOK_LONGLONGP,
 	TOK_SIGNEDP,
 	TOK_UNSIGNEDP,
-	TOK_BOOLP,
+	TOK_BOOLP,			// Bool pointers lmao
 
 	// Literals
 	TOK_INTLIT,
@@ -47,28 +47,45 @@ typedef enum TokenType {
 	TOK_DOUBLELIT,
 	TOK_LONGDOUBLELIT,
 	TOK_STRINGLIT,
-	TOK_BOOLLIT,
+	TOK_BOOLLIT,		// This should consider false and true
+
+	// Storage Class Specifiers
+	TOK_EXTERN,
+	TOK_STATIC,
+	TOK_AUTO,
+	TOK_REGISTER,
+
+	// Type Qualifiers
+	TOK_CONST,
+	TOK_VOLATILE,
+	TOK_RESTRICT,
+	TOK_REF,			// Ref qualifier as an alternative to pointers
 
 	// Identifiers
 	TOK_ID,
 
-	// Keywords
+	// Operator and Utility Keywords
+	TOK_SIZEOF,
 	TOK_RETURN,
-	TOK_IF,
-	TOK_ELSE,
-	TOK_WHILE,
-	TOK_FOR,
-	TOK_DO,
-	TOK_SWITCH,
-	TOK_CASE,
-	TOK_DEFAULT,
-	TOK_BREAK,
-	TOK_CONTINUE,
+	TOK_GOTO,
 	TOK_TYPEDEF,
+
+	// User Defined Types
 	TOK_STRUCT,
 	TOK_UNION,
 	TOK_ENUM,
-	TOK_SIZEOF,
+
+	// Control Flow Statements
+	TOK_IF,
+	TOK_ELSE,
+	TOK_SWITCH,
+	TOK_CASE,
+	TOK_DEFAULT,
+	TOK_FOR,
+	TOK_WHILE,
+	TOK_DO,
+	TOK_BREAK,
+	TOK_CONTINUE,
 
 	// Operators
 	TOK_ASSIGN,
