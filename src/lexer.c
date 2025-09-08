@@ -11,11 +11,11 @@ TokenType TokenTypeParseString(const char *str) {
 	if (strcmp(str, "signed") == 0)		return TOK_SIGNED;
 	if (strcmp(str, "unsigned") == 0)	return TOK_UNSIGNED;
 	if (strcmp(str, "return") == 0)		return TOK_RETURN;
-	if (strcmp(str, "if") == 0)		return TOK_IF;
+	if (strcmp(str, "if") == 0)			return TOK_IF;
 	if (strcmp(str, "else") == 0)		return TOK_ELSE;
 	if (strcmp(str, "while") == 0)		return TOK_WHILE;
 	if (strcmp(str, "for") == 0)		return TOK_FOR;
-	if (strcmp(str, "do") == 0)		return TOK_DO;
+	if (strcmp(str, "do") == 0)			return TOK_DO;
 	if (strcmp(str, "switch") == 0)		return TOK_SWITCH;
 	if (strcmp(str, "case") == 0)		return TOK_CASE;
 	if (strcmp(str, "default") == 0)	return TOK_DEFAULT;
@@ -26,8 +26,7 @@ TokenType TokenTypeParseString(const char *str) {
 	if (strcmp(str, "union") == 0)		return TOK_UNION;
 	if (strcmp(str, "enum") == 0)		return TOK_ENUM;
 	if (strcmp(str, "sizeof") == 0)		return TOK_SIZEOF;
-
-						return TOK_ID;
+												return TOK_ID;
 }
 Token GetNextToken(char **input, int *line, int *column) {
 	// Ignore whitespace and track line/column numbers
@@ -116,32 +115,32 @@ Token GetNextToken(char **input, int *line, int *column) {
 
 	// Handle singlecharacter tokens
 	switch (**input) {
-		case '(': (*input)++; (*column)++; return (Token) { TOK_OPENPARENTHESIS, "(", *line, *column - 1 };
+		case '(': (*input)++; (*column)++; return (Token) { TOK_OPENPARENTHESIS, 	"(", *line, *column - 1 };
 		case ')': (*input)++; (*column)++; return (Token) { TOK_CLOSEPARENTHESIS, ")", *line, *column - 1 };
-		case '{': (*input)++; (*column)++; return (Token) { TOK_OPENCURLYBRACES, "{", *line, *column - 1 };
+		case '{': (*input)++; (*column)++; return (Token) { TOK_OPENCURLYBRACES, 	"{", *line, *column - 1 };
 		case '}': (*input)++; (*column)++; return (Token) { TOK_CLOSECURLYBRACES, "}", *line, *column - 1 };
-		case '[': (*input)++; (*column)++; return (Token) { TOK_OPENBRAKET, "[", *line, *column - 1 };
-		case ']': (*input)++; (*column)++; return (Token) { TOK_CLOSEBRAKET, "]", *line, *column - 1 };
-		case ';': (*input)++; (*column)++; return (Token) { TOK_SEMICOLON, ";", *line, *column - 1 };
-		case ',': (*input)++; (*column)++; return (Token) { TOK_COMMA, ",", *line, *column - 1 };
-		case ':': (*input)++; (*column)++; return (Token) { TOK_COLON, ":", *line, *column - 1 };
-		case '?': (*input)++; (*column)++; return (Token) { TOK_QUESTION, "?", *line, *column - 1 };
-		case '!': (*input)++; (*column)++; return (Token) { TOK_NOT, "!", *line, *column - 1 };
-		case '&': (*input)++; (*column)++; return (Token) { TOK_BITAND, "&", *line, *column - 1 };
-		case '|': (*input)++; (*column)++; return (Token) { TOK_BITOR, "|", *line, *column - 1 };
-		case '^': (*input)++; (*column)++; return (Token) { TOK_BITXOR, "^", *line, *column - 1 };
-		case '~': (*input)++; (*column)++; return (Token) { TOK_BITNOT, "~", *line, *column - 1 };
-		case '=': (*input)++; (*column)++; return (Token) { TOK_ASSIGN, "=", *line, *column - 1 };
-		case '+': (*input)++; (*column)++; return (Token) { TOK_PLUS, "+", *line, *column - 1 };
-		case '-': (*input)++; (*column)++; return (Token) { TOK_MINUS, "-", *line, *column - 1 };
-		case '*': (*input)++; (*column)++; return (Token) { TOK_STAR, "*", *line, *column - 1 };
-		case '/': (*input)++; (*column)++; return (Token) { TOK_SLASH, "/", *line, *column - 1 };
-		case '%': (*input)++; (*column)++; return (Token) { TOK_PERCENT, "%", *line, *column - 1 };
-		case '<': (*input)++; (*column)++; return (Token) { TOK_LESSERTHAN, "<", *line, *column - 1 };
-		case '>': (*input)++; (*column)++; return (Token) { TOK_GREATERTHAN, ">", *line, *column - 1 };
-		case '.': (*input)++; (*column)++; return (Token) { TOK_DOT, ".", *line, *column - 1 };
+		case '[': (*input)++; (*column)++; return (Token) { TOK_OPENBRACKET, 		"[", *line, *column - 1 };
+		case ']': (*input)++; (*column)++; return (Token) { TOK_CLOSEBRACKET, 	"]", *line, *column - 1 };
+		case ';': (*input)++; (*column)++; return (Token) { TOK_SEMICOLON, 		";", *line, *column - 1 };
+		case ',': (*input)++; (*column)++; return (Token) { TOK_COMMA, 			",", *line, *column - 1 };
+		case ':': (*input)++; (*column)++; return (Token) { TOK_COLON, 			":", *line, *column - 1 };
+		case '?': (*input)++; (*column)++; return (Token) { TOK_QUESTION, 		"?", *line, *column - 1 };
+		case '!': (*input)++; (*column)++; return (Token) { TOK_NOT, 				"!", *line, *column - 1 };
+		case '&': (*input)++; (*column)++; return (Token) { TOK_BITAND, 			"&", *line, *column - 1 };
+		case '|': (*input)++; (*column)++; return (Token) { TOK_BITOR, 			"|", *line, *column - 1 };
+		case '^': (*input)++; (*column)++; return (Token) { TOK_BITXOR, 			"^", *line, *column - 1 };
+		case '~': (*input)++; (*column)++; return (Token) { TOK_BITNOT, 			"~", *line, *column - 1 };
+		case '=': (*input)++; (*column)++; return (Token) { TOK_ASSIGN, 			"=", *line, *column - 1 };
+		case '+': (*input)++; (*column)++; return (Token) { TOK_PLUS, 			"+", *line, *column - 1 };
+		case '-': (*input)++; (*column)++; return (Token) { TOK_MINUS, 			"-", *line, *column - 1 };
+		case '*': (*input)++; (*column)++; return (Token) { TOK_STAR, 			"*", *line, *column - 1 };
+		case '/': (*input)++; (*column)++; return (Token) { TOK_SLASH, 			"/", *line, *column - 1 };
+		case '%': (*input)++; (*column)++; return (Token) { TOK_PERCENT, 			"%", *line, *column - 1 };
+		case '<': (*input)++; (*column)++; return (Token) { TOK_LESSERTHAN, 		"<", *line, *column - 1 };
+		case '>': (*input)++; (*column)++; return (Token) { TOK_GREATERTHAN, 		">", *line, *column - 1 };
+		case '.': (*input)++; (*column)++; return (Token) { TOK_DOT, 				".", *line, *column - 1 };
 	}
-	
+
 	// Handle multicharacter tokens, identifiers and keywords,
 	if (isalpha(**input)) {
 		char *start = *input;
@@ -254,7 +253,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 			else type = TOK_DOUBLELIT;
 		}
 		else type = TOK_INTLIT;
-		
+
 		return (Token) { type, value, *line, startColumn };
 	}
 
@@ -262,7 +261,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 	exit(1);
 }
 bool TokenPrint(Token token) {
-	if (token.id == NULL) return false;
+	if (token.value == NULL) return false;
 	static const char *type[] = {   "TOK_INT",
 					"TOK_FLOAT",
 					"TOK_CHAR",
@@ -339,7 +338,7 @@ bool TokenPrint(Token token) {
 					"TOK_QUESTION",
 					"TOK_EOF",
 					"TOK_ERROR" };
-	printf("[%s, \"%s\"] ", type[(int) token.type] ,token.id);
+	printf("[%s, \"%s\"] ", type[(int) token.type] ,token.value);
 	return true;
 }
 bool TokenFree(Token *token) {
@@ -348,7 +347,7 @@ bool TokenFree(Token *token) {
 		case TOK_RETURN:
 		case TOK_ID:
 		case TOK_INTLIT:
-			free(token->id);
+			free(token->value);
 			return true;
 		default: return false;
 	}

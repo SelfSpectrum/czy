@@ -8,30 +8,37 @@
 #include <stdbool.h>
 
 typedef struct Token Token;
-typedef enum TokenType TokenType;
 typedef struct TokenNode TokenNode;
 typedef struct TokenQueue TokenQueue;
 
-enum TokenType {
+typedef enum TokenType {
 	// Data types
 	TOK_INT,
 	TOK_FLOAT,
 	TOK_CHAR,
 	TOK_VOID,
 	TOK_DOUBLE,
-	TOK_SHORT,
+	TOK_LONGDOUBLE,
 	TOK_LONG,
+	TOK_SHORT,
+	TOK_LONGLONG,
 	TOK_SIGNED,
 	TOK_UNSIGNED,
-	
+	TOK_BOOL,			// This is in C, sure, but making sure to add it native in Czy
+
 	// Pointer types
 	TOK_INTP,
-	TOK_CHARP,
 	TOK_FLOATP,
-	TOK_DOUBLELITP,
-	TOK_LONGDOUBLELITP,
+	TOK_CHARP,
 	TOK_VOIDP,
 	TOK_DOUBLEP,
+	TOK_LONGDOUBLEP,
+	TOK_LONGP,
+	TOK_SHORTP,
+	TOK_LONGLONGP,
+	TOK_SIGNEDP,
+	TOK_UNSIGNEDP,
+	TOK_BOOLP,
 
 	// Literals
 	TOK_INTLIT,
@@ -40,6 +47,7 @@ enum TokenType {
 	TOK_DOUBLELIT,
 	TOK_LONGDOUBLELIT,
 	TOK_STRINGLIT,
+	TOK_BOOLLIT,
 
 	// Identifiers
 	TOK_ID,
@@ -110,7 +118,7 @@ enum TokenType {
 	// Special
 	TOK_EOF,
 	TOK_ERROR
-};
+} TokenType;
 
 struct Token {
 	TokenType type;
@@ -137,6 +145,7 @@ bool TokenPrint(Token token);
 bool TokenFree(Token *token);
 bool TokenExpect(TokenQueue *q, TokenType type);
 bool TokenIsDataType(TokenQueue *q);
+bool TokenIsKeyword(const char *str);
 bool TokenQueuePush(TokenQueue *q, Token token);
 Token TokenQueuePop(TokenQueue *q);
 Token TokenQueuePeek(TokenQueue *q);
