@@ -25,6 +25,8 @@ typedef enum TokenType {
 	TOK_SIGNED,
 	TOK_UNSIGNED,
 	TOK_BOOL,			// This is in C, sure, but making sure to add it native in Czy
+	TOK_STRING,			// String type, not in C, but necessary in Czy
+	TOK_LAMBDA,			// For lambda expressions, all behave like closures
 
 	// Pointer types
 	TOK_INTP,
@@ -39,6 +41,8 @@ typedef enum TokenType {
 	TOK_SIGNEDP,
 	TOK_UNSIGNEDP,
 	TOK_BOOLP,			// Bool pointers lmao
+	TOK_STRINGP,		// String pointers
+	TOK_LAMBDAP,		// Pointer to lambda, which might or might not be just a function
 
 	// Literals
 	TOK_INTLIT,
@@ -54,12 +58,13 @@ typedef enum TokenType {
 	TOK_STATIC,
 	TOK_AUTO,
 	TOK_REGISTER,
+	TOK_ATTACH,			// Attach function to a type as a method (extension method)
 
 	// Type Qualifiers
 	TOK_CONST,
 	TOK_VOLATILE,
 	TOK_RESTRICT,
-	TOK_REF,			// Ref qualifier as an alternative to pointers
+	TOK_REF,			// Ref qualifier as an alternative to pointers and reference-captures in lambdas
 
 	// Identifiers
 	TOK_ID,
@@ -69,6 +74,9 @@ typedef enum TokenType {
 	TOK_RETURN,
 	TOK_GOTO,
 	TOK_TYPEDEF,
+	TOK_ALLOC,			// Keyword to allocate memory
+	TOK_DEALLOC,		// Keyword to deallocate memory
+	TOK_IMPORT,			// Import another C or Czy file as a module
 
 	// User Defined Types
 	TOK_STRUCT,
@@ -86,6 +94,7 @@ typedef enum TokenType {
 	TOK_DO,
 	TOK_BREAK,
 	TOK_CONTINUE,
+	TOK_MATCH,			// Pattern matching, similar to switch, more powerful, but not optimized
 
 	// Operators
 	TOK_ASSIGN,

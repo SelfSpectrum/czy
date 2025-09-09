@@ -115,30 +115,30 @@ Token GetNextToken(char **input, int *line, int *column) {
 
 	// Handle singlecharacter tokens
 	switch (**input) {
-		case '(': (*input)++; (*column)++; return (Token) { TOK_OPENPARENTHESIS, 	"(", *line, *column - 1 };
-		case ')': (*input)++; (*column)++; return (Token) { TOK_CLOSEPARENTHESIS, ")", *line, *column - 1 };
-		case '{': (*input)++; (*column)++; return (Token) { TOK_OPENCURLYBRACES, 	"{", *line, *column - 1 };
-		case '}': (*input)++; (*column)++; return (Token) { TOK_CLOSECURLYBRACES, "}", *line, *column - 1 };
-		case '[': (*input)++; (*column)++; return (Token) { TOK_OPENBRACKET, 		"[", *line, *column - 1 };
-		case ']': (*input)++; (*column)++; return (Token) { TOK_CLOSEBRACKET, 	"]", *line, *column - 1 };
-		case ';': (*input)++; (*column)++; return (Token) { TOK_SEMICOLON, 		";", *line, *column - 1 };
-		case ',': (*input)++; (*column)++; return (Token) { TOK_COMMA, 			",", *line, *column - 1 };
-		case ':': (*input)++; (*column)++; return (Token) { TOK_COLON, 			":", *line, *column - 1 };
-		case '?': (*input)++; (*column)++; return (Token) { TOK_QUESTION, 		"?", *line, *column - 1 };
-		case '!': (*input)++; (*column)++; return (Token) { TOK_NOT, 				"!", *line, *column - 1 };
-		case '&': (*input)++; (*column)++; return (Token) { TOK_BITAND, 			"&", *line, *column - 1 };
-		case '|': (*input)++; (*column)++; return (Token) { TOK_BITOR, 			"|", *line, *column - 1 };
-		case '^': (*input)++; (*column)++; return (Token) { TOK_BITXOR, 			"^", *line, *column - 1 };
-		case '~': (*input)++; (*column)++; return (Token) { TOK_BITNOT, 			"~", *line, *column - 1 };
-		case '=': (*input)++; (*column)++; return (Token) { TOK_ASSIGN, 			"=", *line, *column - 1 };
-		case '+': (*input)++; (*column)++; return (Token) { TOK_PLUS, 			"+", *line, *column - 1 };
-		case '-': (*input)++; (*column)++; return (Token) { TOK_MINUS, 			"-", *line, *column - 1 };
-		case '*': (*input)++; (*column)++; return (Token) { TOK_STAR, 			"*", *line, *column - 1 };
-		case '/': (*input)++; (*column)++; return (Token) { TOK_SLASH, 			"/", *line, *column - 1 };
-		case '%': (*input)++; (*column)++; return (Token) { TOK_PERCENT, 			"%", *line, *column - 1 };
-		case '<': (*input)++; (*column)++; return (Token) { TOK_LESSERTHAN, 		"<", *line, *column - 1 };
-		case '>': (*input)++; (*column)++; return (Token) { TOK_GREATERTHAN, 		">", *line, *column - 1 };
-		case '.': (*input)++; (*column)++; return (Token) { TOK_DOT, 				".", *line, *column - 1 };
+		case '(': (*input)++; (*column)++; return (Token) { TOK_OPENPARENTHESIS,	"(", *line, *column - 1 };
+		case ')': (*input)++; (*column)++; return (Token) { TOK_CLOSEPARENTHESIS,	")", *line, *column - 1 };
+		case '{': (*input)++; (*column)++; return (Token) { TOK_OPENCURLYBRACES,	"{", *line, *column - 1 };
+		case '}': (*input)++; (*column)++; return (Token) { TOK_CLOSECURLYBRACES,	"}", *line, *column - 1 };
+		case '[': (*input)++; (*column)++; return (Token) { TOK_OPENBRACKET,		"[", *line, *column - 1 };
+		case ']': (*input)++; (*column)++; return (Token) { TOK_CLOSEBRACKET,		"]", *line, *column - 1 };
+		case ';': (*input)++; (*column)++; return (Token) { TOK_SEMICOLON,		";", *line, *column - 1 };
+		case ',': (*input)++; (*column)++; return (Token) { TOK_COMMA,			",", *line, *column - 1 };
+		case ':': (*input)++; (*column)++; return (Token) { TOK_COLON,			":", *line, *column - 1 };
+		case '?': (*input)++; (*column)++; return (Token) { TOK_QUESTION,		"?", *line, *column - 1 };
+		case '!': (*input)++; (*column)++; return (Token) { TOK_NOT,			"!", *line, *column - 1 };
+		case '&': (*input)++; (*column)++; return (Token) { TOK_BITAND,			"&", *line, *column - 1 };
+		case '|': (*input)++; (*column)++; return (Token) { TOK_BITOR,			"|", *line, *column - 1 };
+		case '^': (*input)++; (*column)++; return (Token) { TOK_BITXOR,			"^", *line, *column - 1 };
+		case '~': (*input)++; (*column)++; return (Token) { TOK_BITNOT,			"~", *line, *column - 1 };
+		case '=': (*input)++; (*column)++; return (Token) { TOK_ASSIGN,			"=", *line, *column - 1 };
+		case '+': (*input)++; (*column)++; return (Token) { TOK_PLUS,			"+", *line, *column - 1 };
+		case '-': (*input)++; (*column)++; return (Token) { TOK_MINUS,			"-", *line, *column - 1 };
+		case '*': (*input)++; (*column)++; return (Token) { TOK_STAR,			"*", *line, *column - 1 };
+		case '/': (*input)++; (*column)++; return (Token) { TOK_SLASH,			"/", *line, *column - 1 };
+		case '%': (*input)++; (*column)++; return (Token) { TOK_PERCENT,		"%", *line, *column - 1 };
+		case '<': (*input)++; (*column)++; return (Token) { TOK_LESSERTHAN,		"<", *line, *column - 1 };
+		case '>': (*input)++; (*column)++; return (Token) { TOK_GREATERTHAN,		">", *line, *column - 1 };
+		case '.': (*input)++; (*column)++; return (Token) { TOK_DOT,			".", *line, *column - 1 };
 	}
 
 	// Handle multicharacter tokens, identifiers and keywords,
