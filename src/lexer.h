@@ -23,8 +23,10 @@ typedef enum TokenType {
 	TOK_SHORT,
 	TOK_LONGLONG,
 	TOK_SIGNED,
-	TOK_UNSIGNED,
-	TOK_BOOL,			// This is in C, sure, but making sure to add it native in Czy
+	uuTOK_UNSIGNED, 
+	TOK_BOOL,			// This is in C since C23
+	TOK_IMAGINARY,			// Imaginary type for complex numbers, e.g. 1.0i
+	TOK_COMPLEX,			// Complex type for complex numbers, e.g. 1.0 + 2.0i
 	TOK_STRING,			// String type, not in C, but necessary in Czy
 	TOK_LAMBDA,			// For lambda expressions, all behave like closures
 
@@ -41,8 +43,8 @@ typedef enum TokenType {
 	TOK_SIGNEDP,
 	TOK_UNSIGNEDP,
 	TOK_BOOLP,			// Bool pointers lmao
-	TOK_STRINGP,		// String pointers
-	TOK_LAMBDAP,		// Pointer to lambda, which might or might not be just a function
+	TOK_STRINGP,			// String pointers
+	TOK_LAMBDAP,			// Pointer to lambda, which might or might not be just a function
 
 	// Literals
 	TOK_INTLIT,
@@ -51,20 +53,26 @@ typedef enum TokenType {
 	TOK_DOUBLELIT,
 	TOK_LONGDOUBLELIT,
 	TOK_STRINGLIT,
-	TOK_BOOLLIT,		// This should consider false and true
+	TOK_FALSE, 			// Boolean false literal
+	TOK_TRUE,			// Boolean true literal
+	TOK_NULLPTR,			// Null pointer literal
 
 	// Storage Class Specifiers
 	TOK_EXTERN,
 	TOK_STATIC,
 	TOK_AUTO,
-	TOK_REGISTER,
+	TOK_INLINE,
+	TOK_CONSTEXPR,			// C23 constexpr for compile-time constants, similar to C++ constexpr
 	TOK_ATTACH,			// Attach function to a type as a method (extension method)
 
 	// Type Qualifiers
 	TOK_CONST,
 	TOK_VOLATILE,
-	TOK_RESTRICT,
+	TOK_RESTRICT,			// restrict qualifier as in C99
+	TOK_ATOMIC,			// Atomic qualifier as in C11
+	TOK_ALIGNAS,			// Specify alignment of a variable or struct member
 	TOK_REF,			// Ref qualifier as an alternative to pointers and reference-captures in lambdas
+	TOK_COMPILETIME,		// Compile-time evaluated variable or function, similar to DEFINE macro, but with type safety and scope
 
 	// Identifiers
 	TOK_ID,
@@ -74,9 +82,11 @@ typedef enum TokenType {
 	TOK_RETURN,
 	TOK_GOTO,
 	TOK_TYPEDEF,
+	TOK_ALIGNOF,			// Get the alignment requirement of a type
 	TOK_ALLOC,			// Keyword to allocate memory
-	TOK_DEALLOC,		// Keyword to deallocate memory
+	TOK_DEALLOC,			// Keyword to deallocate memory
 	TOK_IMPORT,			// Import another C or Czy file as a module
+	TOP_TYPEOF,			// Get the type of a variable or expression, similar to typeof in C#
 
 	// User Defined Types
 	TOK_STRUCT,
@@ -107,6 +117,7 @@ typedef enum TokenType {
 	TOK_MINUSMINUS,
 	TOK_ARROW,
 	TOK_DOT,
+	TOK_ANONOP,			// Anonymous operator for lambdas, e.g. (x, y) => x + y
 
 	// Comparison operators
 	TOK_EQUAL,
