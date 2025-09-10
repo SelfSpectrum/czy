@@ -1,0 +1,33 @@
+import "stdio.h";
+
+generic T Max<T> (T a, T b) {
+	int:
+		return a > b ? a : b;
+	float:
+		return a > b ? a : b;
+	double:
+		return a > b ? a : b;
+	default:
+		break;
+}
+generic void Print<T> (T val) {
+	int:
+		printf("%d\n", val);
+		break;
+	float:
+		printf("%f\n", val);
+		break;
+	double:
+		printf("%lf\n", val);
+		break;
+	default:
+		printf("Non valid input.\n");
+		break;
+}
+
+int main() {
+	Print(Max(10, 33));
+	Print(Max(0.09f, 0.1f));
+	Print(Max(7.3, 6.9));
+	return 0;
+}

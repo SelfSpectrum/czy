@@ -63,6 +63,7 @@ typedef enum TokenType {
 	TOK_AUTO,
 	TOK_INLINE,
 	TOK_CONSTEXPR,			// C23 constexpr for compile-time constants, similar to C++ constexpr
+	TOK_GENERIC,			// Generic type specifier, similar to _Generic in C11, but extended
 	TOK_ATTACH,			// Attach function to a type as a method (extension method)
 
 	// Type Qualifiers
