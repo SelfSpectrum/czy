@@ -13,7 +13,7 @@ typedef struct TokenQueue TokenQueue;
 
 typedef enum TokenType {
 	// Data types
-	TOK_INT,
+	TOK_INT = 0,
 	TOK_FLOAT,
 	TOK_CHAR,
 	TOK_VOID,
@@ -23,7 +23,7 @@ typedef enum TokenType {
 	TOK_SHORT,
 	TOK_LONGLONG,
 	TOK_SIGNED,
-	uuTOK_UNSIGNED, 
+	TOK_UNSIGNED, 
 	TOK_BOOL,			// This is in C since C23
 	TOK_IMAGINARY,			// Imaginary type for complex numbers, e.g. 1.0i
 	TOK_COMPLEX,			// Complex type for complex numbers, e.g. 1.0 + 2.0i
@@ -84,10 +84,10 @@ typedef enum TokenType {
 	TOK_GOTO,
 	TOK_TYPEDEF,
 	TOK_ALIGNOF,			// Get the alignment requirement of a type
+	TOP_TYPEOF,			// Get the type of an expression
 	TOK_ALLOC,			// Keyword to allocate memory
 	TOK_DEALLOC,			// Keyword to deallocate memory
 	TOK_IMPORT,			// Import another C or Czy file as a module
-	TOP_TYPEOF,			// Get the type of a variable or expression, similar to typeof in C#
 
 	// User Defined Types
 	TOK_STRUCT,

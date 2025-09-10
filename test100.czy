@@ -8,7 +8,8 @@ generic T Max<T> (T a, T b) {
 	double:
 		return a > b ? a : b;
 	default:
-		break;
+		printf("Non valid input.\n");
+		return a;
 }
 generic void Print<T> (T val) {
 	int:

@@ -10,23 +10,52 @@ TokenType TokenTypeParseString(const char *str) {
 	if (strcmp(str, "long") == 0)		return TOK_LONG;
 	if (strcmp(str, "signed") == 0)		return TOK_SIGNED;
 	if (strcmp(str, "unsigned") == 0)	return TOK_UNSIGNED;
+	if (strcmp(str, "bool") == 0)		return TOK_BOOL;
+	if (strcmp(str, "imaginary") == 0)	return TOK_IMAGINARY;
+	if (strcmp(str, "complex") == 0)	return TOK_COMPLEX;
+	if (strcmp(str, "string") == 0)		return TOK_STRING;
+	if (strcmp(str, "lambda") == 0)		return TOK_LAMBDA;
+	if (strcmp(str, "false") == 0)		return TOK_FALSE;
+	if (strcmp(str, "true") == 0)		return TOK_TRUE;
+	if (strcmp(str, "nullptr") == 0)	return TOK_NULLPTR;
+	if (strcmp(str, "extern") == 0)		return TOK_EXTERN;
+	if (strcmp(str, "static") == 0)		return TOK_STATIC;
+	if (strcmp(str, "auto") == 0)		return TOK_AUTO;
+	if (strcmp(str, "inline") == 0)		return TOK_INLINE;
+	if (strcmp(str, "constexpr") == 0)	return TOK_CONSTEXPR;
+	if (strcmp(str, "generic") == 0)	return TOK_GENERIC;
+	if (strcmp(str, "attach") == 0)		return TOK_ATTACH;
+	if (strcmp(str, "const") == 0)		return TOK_CONST;
+	if (strcmp(str, "volatile") == 0)	return TOK_VOLATILE;
+	if (strcmp(str, "restrict") == 0)	return TOK_RESTRICT;
+	if (strcmp(str, "atomic") == 0)		return TOK_ATOMIC;
+	if (strcmp(str, "alignas") == 0)	return TOK_ALIGNAS;
+	if (strcmp(str, "ref") == 0)		return TOK_REF;
+	if (strcmp(str, "compiletime") == 0)	return TOK_COMPILETIME;
+	if (strcmp(str, "sizeof") == 0)		return TOK_SIZEOF;
 	if (strcmp(str, "return") == 0)		return TOK_RETURN;
-	if (strcmp(str, "if") == 0)			return TOK_IF;
-	if (strcmp(str, "else") == 0)		return TOK_ELSE;
-	if (strcmp(str, "while") == 0)		return TOK_WHILE;
-	if (strcmp(str, "for") == 0)		return TOK_FOR;
-	if (strcmp(str, "do") == 0)			return TOK_DO;
-	if (strcmp(str, "switch") == 0)		return TOK_SWITCH;
-	if (strcmp(str, "case") == 0)		return TOK_CASE;
-	if (strcmp(str, "default") == 0)	return TOK_DEFAULT;
-	if (strcmp(str, "break") == 0)		return TOK_BREAK;
-	if (strcmp(str, "continue") == 0)	return TOK_CONTINUE;
+	if (strcmp(str, "goto") == 0)		return TOK_GOTO;
 	if (strcmp(str, "typedef") == 0)	return TOK_TYPEDEF;
+	if (strcmp(str, "alignof") == 0)	return TOK_ALIGNOF;
+	if (strcmp(str, "typeof") == 0)		return TOK_TYPEOF;
+	if (strcmp(str, "alloc") == 0)		return TOK_ALLOC;
+	if (strcmp(str, "dealloc") == 0)	return TOK_DEALLOC;
+	if (strcmp(str, "import") == 0)		return TOK_IMPORT;
 	if (strcmp(str, "struct") == 0)		return TOK_STRUCT;
 	if (strcmp(str, "union") == 0)		return TOK_UNION;
 	if (strcmp(str, "enum") == 0)		return TOK_ENUM;
-	if (strcmp(str, "sizeof") == 0)		return TOK_SIZEOF;
-												return TOK_ID;
+	if (strcmp(str, "if") == 0)		return TOK_IF;
+	if (strcmp(str, "else") == 0)		return TOK_ELSE;
+	if (strcmp(str, "switch") == 0)		return TOK_SWITCH;
+	if (strcmp(str, "case") == 0)		return TOK_CASE;
+	if (strcmp(str, "default") == 0)	return TOK_DEFAULT;
+	if (strcmp(str, "for") == 0)		return TOK_FOR;
+	if (strcmp(str, "while") == 0)		return TOK_WHILE;
+	if (strcmp(str, "do") == 0)		return TOK_DO;
+	if (strcmp(str, "break") == 0)		return TOK_BREAK;
+	if (strcmp(str, "continue") == 0)	return TOK_CONTINUE;
+	if (strcmp(str, "match") == 0)		return TOK_MATCH;
+						return TOK_ID;
 }
 Token GetNextToken(char **input, int *line, int *column) {
 	// Ignore whitespace and track line/column numbers
@@ -262,7 +291,9 @@ Token GetNextToken(char **input, int *line, int *column) {
 }
 bool TokenPrint(Token token) {
 	if (token.value == NULL) return false;
-	static const char *type[] = {   "TOK_INT",
+	static const char *type[] = {
+					// Data types
+					"TOK_INT",
 					"TOK_FLOAT",
 					"TOK_CHAR",
 					"TOK_VOID",
@@ -271,36 +302,81 @@ bool TokenPrint(Token token) {
 					"TOK_LONG",
 					"TOK_SIGNED",
 					"TOK_UNSIGNED",
+					"TOK_BOOL",
+					"TOK_IMAGINARY",
+					"TOK_COMPLEX",
+					"TOK_STRING",
+					"TOK_LAMBDA",
+					// Pointer types
 					"TOK_INTP",
-					"TOK_CHARP",
 					"TOK_FLOATP",
-					"TOK_DOUBLELITP",
-					"TOK_LONGDOUBLELITP",
+					"TOK_CHARP",
 					"TOK_VOIDP",
 					"TOK_DOUBLEP",
+					"TOK_LONGDOUBLEP",
+					"TOK_LONGP",
+					"TOK_SHORTP",
+					"TOK_LONGLONGP",
+					"TOK_SIGNEDP",
+					"TOK_UNSIGNEDP",
+					"TOK_BOOLP",
+					"TOK_STRINGP",
+					"TOK_LAMBDAP",
+					// Literals
 					"TOK_INTLIT",
 					"TOK_CHARLIT",
 					"TOK_FLOATLIT",
 					"TOK_DOUBLELIT",
 					"TOK_LONGDOUBLELIT",
 					"TOK_STRINGLIT",
+					"TOK_FALSE",
+					"TOK_TRUE",
+					"TOK_NULLPTR",
+					// Storage Class Specifiers
+					"TOK_EXTERN",
+					"TOK_STATIC",
+					"TOK_AUTO",
+					"TOK_INLINE",
+					"TOK_CONSTEXPR",
+					"TOK_GENERIC",
+					"TOK_ATTACH",
+					// Type Qualifiers
+					"TOK_CONST",
+					"TOK_VOLATILE",
+					"TOK_RESTRICT",
+					"TOK_ATOMIC",
+					"TOK_ALIGNAS",
+					"TOK_REF",
+					"TOK_COMPILETIME",
+					// Identifiers
 					"TOK_ID",
+					// Operator and Utility Keywords
+					"TOK_SIZEOF",
 					"TOK_RETURN",
-					"TOK_IF",
-					"TOK_ELSE",
-					"TOK_WHILE",
-					"TOK_FOR",
-					"TOK_DO",
-					"TOK_SWITCH",
-					"TOK_CASE",
-					"TOK_DEFAULT",
-					"TOK_BREAK",
-					"TOK_CONTINUE",
+					"TOK_GOTO",
 					"TOK_TYPEDEF",
+					"TOK_ALIGNOF",
+					"TOP_TYPEOF",
+					"TOK_ALLOC",
+					"TOK_DEALLOC",
+					"TOK_IMPORT",
+					// User Defined Types
 					"TOK_STRUCT",
 					"TOK_UNION",
 					"TOK_ENUM",
-					"TOK_SIZEOF",
+					// Control Flow Statements
+					"TOK_IF",
+					"TOK_ELSE",
+					"TOK_SWITCH",
+					"TOK_CASE",
+					"TOK_DEFAULT",
+					"TOK_FOR",
+					"TOK_WHILE",
+					"TOK_DO",
+					"TOK_BREAK",
+					"TOK_CONTINUE",
+					"TOK_MATCH",
+					// Operators
 					"TOK_ASSIGN",
 					"TOK_PLUS",
 					"TOK_MINUS",
@@ -311,21 +387,26 @@ bool TokenPrint(Token token) {
 					"TOK_MINUSMINUS",
 					"TOK_ARROW",
 					"TOK_DOT",
+					"TOK_ANONOP",
+					// Comparison operators
 					"TOK_EQUAL",
 					"TOK_NOTEQUAL",
 					"TOK_LESSERTHAN",
 					"TOK_GREATERTHAN",
 					"TOK_LESSEROREQUAL",
 					"TOK_GREATEROREQUAL",
+					// Logical operators
 					"TOK_AND",
 					"TOK_OR",
 					"TOK_NOT",
+					// Bitwise operators
 					"TOK_BITAND",
 					"TOK_BITOR",
 					"TOK_BITNOT",
 					"TOK_BITXOR",
 					"TOK_LSHIFT",
 					"TOK_RSHIFT",
+					// Punctuation
 					"TOK_OPENPARENTHESIS",
 					"TOK_CLOSEPARENTHESIS",
 					"TOK_OPENCURLYBRACES",
@@ -336,6 +417,7 @@ bool TokenPrint(Token token) {
 					"TOK_COLON",
 					"TOK_COMMA",
 					"TOK_QUESTION",
+					// Special
 					"TOK_EOF",
 					"TOK_ERROR" };
 	printf("[%s, \"%s\"] ", type[(int) token.type] ,token.value);
@@ -367,6 +449,11 @@ bool TokenIsDataType(TokenQueue *q) {
 		case TOK_LONG:
 		case TOK_SIGNED:
 		case TOK_UNSIGNED:
+		case TOK_BOOL:
+		case TOK_IMAGINARY:
+		case TOK_COMPLEX:
+		case TOK_STRING:
+		case TOK_LAMBDA
 			return true;
 		default: return false;
 	}
@@ -381,22 +468,51 @@ bool TokenIsKeyword(const char *str) {
 					 "long",
 					 "signed",
 					 "unsigned",
+					 "bool",
+					 "imaginary",
+					 "complex",
+					 "string",
+					 "lambda",
+					 "false",
+					 "true",
+					 "nullptr",
+					 "extern",
+					 "static",
+					 "auto",
+					 "inline",
+					 "constexpr",
+					 "generic",
+					 "attach",
+					 "const",
+					 "volatile",
+					 "restrict",
+					 "atomic",
+					 "alignas",
+					 "ref",
+					 "compiletime",
+					 "sizeof",
 					 "return",
-					 "if",
-					 "else",
-					 "while",
-					 "for",
-					 "do",
-					 "switch",
-					 "case",
-					 "default",
-					 "break",
-					 "continue",
+					 "goto",
 					 "typedef",
+					 "alignof",
+					 "typeof",
+					 "alloc",
+					 "dealloc",
+					 "import",
 					 "struct",
 					 "union",
 					 "enum",
-					 "sizeof",
+					 "if",
+					 "else",
+					 "switch",
+					 "case",
+					 "default",
+					 "for",
+					 "while",
+					 "do",
+					 "break",
+					 "continue",
+					 "match",
 					 NULL};
 	for (const char **kw = keywords; *kw; kw++) {
 		if (strcmp(str, *kw) == 0) return true;
