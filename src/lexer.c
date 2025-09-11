@@ -191,23 +191,49 @@ Token GetNextToken(char **input, int *line, int *column) {
 		char *start = *input;
 		int startColumn = *column;
 		bool floatingPoint = false;
-		bool hexadecimal = false;
 		bool floatSuffix = false;
 		bool longSuffix = false;
+		int base = 10;
 
-		// Check for hexadecimal literals
-		if (**input == '0' && ((*input)[1] == 'x' || (*input)[1] == 'X')) {
-			// Hexadecimal part
-			hexadecimal = true;
-			(*input) += 2;
-			(*column) += 2;
-			while (isxdigit(**input)) {
-				(*input)++;
-				(*column)++;
+		// Check for nondecimal literals
+		if (**input == '0') {
+			switch ((*input)[1]) {
+				case 'x':
+				case 'X':
+					// Hexadecimal part
+					base = 16;
+					(*input) += 2;
+					(*column) += 2;
+					while (isxdigit(**input)) {
+						(*input)++;
+						(*column)++;
+					}
+					break;
+				case 'b':
+				case 'B':
+					// Binary part
+					base = 2;
+					(*input) += 2;
+					(*column) += 2;
+					while (**input == '0' || **input == '1') {
+						(*input)++;
+						(*column)++;
+					}
+					break;
+				default:
+					// Octal part
+					base = 8;
+					(*input)++;
+					(*column)++;
+					while (**input >= '0' && **input <= '7') {
+						(*input)++;
+						(*column)++;
+					}
+					break;
 			}
 		}
 		else {
-			// Integer part
+			// Decimal part
 			while (isdigit(**input)) {
 				(*input)++;
 				(*column)++;
@@ -219,31 +245,29 @@ Token GetNextToken(char **input, int *line, int *column) {
 			floatingPoint = true;
 			(*input)++;
 			(*column)++;
-			while (isdigit(**input)) {
-				(*input)++;
-				(*column)++;
+			switch (base) {
+				case 10:
+					// Decimal floating point
+					while (isdigit(**input)) {
+						(*input)++;
+						(*column)++;
+					}
+					break;
+				case 16:
+					// Hexadecimal floating point
+					while (isxdigit(**input)) {
+						(*input)++;
+						(*column)++;
+					}
+					break;
+				default:
+					fprintf(stderr, "Invalid floating-point literal at line %d, column %d\n", *line, *column);
+					exit(1);
 			}
 		}
 
 		// Check for exponent part
-		if (hexadecimal && (**input == 'p' || **input == 'P')) {
-			floatingPoint = true;
-			(*input)++;
-			(*column)++;
-			if (**input == '+' || **input == '-') {
-				(*input)++;
-				(*column)++;
-			}
-			if (!isdigit(**input)) {
-				fprintf(stderr, "Invalid hexadecimal floating-point literal at line %d, column %d\n", *line, *column);
-				exit(1);
-			}
-			while (isdigit(**input)) {
-				(*input)++;
-				(*column)++;
-			}
-		}
-		else if (!hexadecimal && ( **input == 'e' || **input == 'E')) {
+		if (base == 10 && ( **input == 'e' || **input == 'E')) {
 			floatingPoint = true;
 			(*input)++;
 			(*column)++;
@@ -260,6 +284,23 @@ Token GetNextToken(char **input, int *line, int *column) {
 				(*column)++;
 			}
 		}
+		else if (base != 16 && (**input == 'p' || **input == 'P')) {
+			floatingPoint = true;
+			(*input)++;
+			(*column)++;
+			if (**input == '+' || **input == '-') {
+				(*input)++;
+				(*column)++;
+			}
+			if (!isdigit(**input)) {
+				fprintf(stderr, "Invalid hexadecimal floating-point literal at line %d, column %d\n", *line, *column);
+				exit(1);
+			}
+			while (isdigit(**input)) {
+				(*input)++;
+				(*column)++;
+			}
+		}
 
 		// Check for suffix part
 		if (**input == 'f' || **input == 'F') {
@@ -267,10 +308,18 @@ Token GetNextToken(char **input, int *line, int *column) {
 			(*input)++;
 			(*column)++;
 		}
-		else if (**input == 'l' || **input == 'L') {
+		if (**input == 'l' || **input == 'L') {
+			if (floatSuffix) {
+				fprintf(stderr, "Invalid literal suffix 'fl' at line %d, column %d\n", *line, *column);
+				exit(1);
+			}
 			longSuffix = true;
 			(*input)++;
 			(*column)++;
+		}
+		if (floatSuffix && longSuffix) {
+			fprintf(stderr, "Invalid literal suffix 'lf' at line %d, column %d\n", *line, *column);
+			exit(1);
 		}
 
 		size_t length = *input - start;
