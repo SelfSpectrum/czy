@@ -9,7 +9,7 @@
 
 #define RAISE_ERR(err, line, col, expr) \
 	fprintf(stderr, "%s at line %d, column %d.\n%s", err, line, col, expr); \
-	exit(EXIT_FAILURE); \
+	exit(EXIT_FAILURE);
 
 typedef struct Token Token;
 typedef struct TokenNode TokenNode;
@@ -88,7 +88,7 @@ typedef enum TokenType {
 	TOK_GOTO,
 	TOK_TYPEDEF,
 	TOK_ALIGNOF,			// Get the alignment requirement of a type
-	TOP_TYPEOF,			// Get the type of an expression
+	TOK_TYPEOF,			// Get the type of an expression
 	TOK_ALLOC,			// Keyword to allocate memory
 	TOK_DEALLOC,			// Keyword to deallocate memory
 	TOK_IMPORT,			// Import another C or Czy file as a module

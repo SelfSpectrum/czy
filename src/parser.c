@@ -11,7 +11,7 @@ ASTNode *ASTParseScope(TokenQueue *q1, TokenQueue *q2) {
 
 	node->type = AST_SCOPE;
 	if (!TokenExpect(q1, TOK_OPENCURLYBRACES)) {
-		fprintf(stderr, "Unexpected token in scope: %s\nAn opening curly brace was expected.\n", TokenQueuePeek(q1).id);
+		fprintf(stderr, "Unexpected token in scope: %s\nAn opening curly brace was expected.\n", TokenQueuePeek(q1).value);
 		exit(1);
 	}
 	TokenQueuePush(q2, TokenQueuePop(q1));
@@ -21,7 +21,7 @@ ASTNode *ASTParseScope(TokenQueue *q1, TokenQueue *q2) {
 			node->returnStatement.expression = ASTParseReturn(q1, q2);
 			continue;
 		}
-		else if (TokenIsType(q1)) {
+		else if (TokenIsDataType(q1)) {
 			node->expression.body = ASTParseExpression(q1, q2);
 			continue;
 		}
@@ -34,13 +34,13 @@ ASTNode *ASTParseScope(TokenQueue *q1, TokenQueue *q2) {
 			continue;
 		}
 		else {
-			fprintf(stderr, "Unexpected token in scope: %s\n", TokenQueuePeek(q1).id);
+			fprintf(stderr, "Unexpected token in scope: %s\n", TokenQueuePeek(q1).value);
 			exit(1);
 		}
 	}
 
 	if (!TokenExpect(q1, TOK_CLOSECURLYBRACES)) {
-		fprintf(stderr, "Unexpected end of scope: %s\nA closing curly brace was expected.\n", TokenQueuePeek(q1).id);
+		fprintf(stderr, "Unexpected end of scope: %s\nA closing curly brace was expected.\n", TokenQueuePeek(q1).value);
 		exit(1);
 	}
 	
@@ -56,18 +56,18 @@ ASTNode *ASTParseExpression(TokenQueue *q1, TokenQueue *q2) {
 	if (node == NULL) return NULL;
 
 	node->type = AST_EXPRESSION;
-	if (!TokenIsType(q1)) {
-		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", TokenQueuePeek(q1).id);
+	if (!TokenIsDataType(q1)) {
+		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", TokenQueuePeek(q1).value);
 		exit(1);
 	}
-	node->expression.type = strdup(TokenQueuePeek(q1).id);
+	node->expression.type = strdup(TokenQueuePeek(q1).value);
 
 	TokenQueuePush(q2, TokenQueuePop(q1));
 	if (!TokenExpect(q1, TOK_ID)) {
-		fprintf(stderr, "Unexpected token in expression: %s\nAn ID was expected.\n", TokenQueuePeek(q1).id);
+		fprintf(stderr, "Unexpected token in expression: %s\nAn ID was expected.\n", TokenQueuePeek(q1).value);
 		exit(1);
 	}
-	node->expression.name = strdup(TokenQueuePeek(q1).id);
+	node->expression.name = strdup(TokenQueuePeek(q1).value);
 
 	TokenQueuePush(q2, TokenQueuePop(q1));
 	return node;
@@ -83,10 +83,10 @@ ASTNode *ASTParseFunction(TokenQueue *q1, TokenQueue *q2) {
 
 	node->type = AST_FUNCTION;
 	if (!TokenExpect(q1, TOK_OPENPARENTHESIS)) {
-		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", TokenQueuePeek(q1).id);
+		fprintf(stderr, "Unexpected token in expression: %s\nA type was expected.\n", TokenQueuePeek(q1).value);
 		exit(1);
 	}
-	node->expression.type = strdup(TokenQueuePeek(q1).id);
+	node->expression.type = strdup(TokenQueuePeek(q1).value);
 
 	return node;
 
@@ -101,7 +101,7 @@ ASTNode *ASTParseValue(TokenQueue *q1, TokenQueue *q2) {
 	if (node == NULL) return NULL;
 
 	node->type = AST_INTLIT;
-	node->intLit = atoi(TokenQueuePeek(q1).id);
+	node->intLit = atoi(TokenQueuePeek(q1).value);
 	return node;
 }
 ASTNode *ASTParseReturn(TokenQueue *q1, TokenQueue *q2) {
@@ -185,19 +185,19 @@ void ASTParseNode(ASTNode **node, TokenQueue *q1, TokenQueue *q2) {
 		if (current == NULL) continue;
 		switch (current->token.type) {
 			case TOK_ID:
-				node->expression.name = strdup(current->token.id);
+				node->expression.name = strdup(current->token.value);
 				break;
 			case TOK_INTLIT:
-				node->intLit = atoi(current->token.id);
+				node->intLit = atoi(current->token.value);
 				break;
 			case TOK_FLOATLIT:
-				node->floatLit = atof(current->token.id);
+				node->floatLit = atof(current->token.value);
 				break;
 			case TOK_STRINGLIT:
-				node->stringLit = strdup(current->token.id);
+				node->stringLit = strdup(current->token.value);
 				break;
 			case TOK_CHARLIT:
-				node->charLit = current->token.id[0];
+				node->charLit = current->token.value[0];
 				break;
 			case TOK_RETURN:
 				*node = ASTParseReturn(q1, q2);

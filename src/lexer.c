@@ -55,7 +55,7 @@ TokenType TokenTypeParseString(const char *str) {
 	if (strcmp(str, "break") == 0)		return TOK_BREAK;
 	if (strcmp(str, "continue") == 0)	return TOK_CONTINUE;
 	if (strcmp(str, "match") == 0)		return TOK_MATCH;
-						return TOK_ID;
+	return TOK_ID;
 }
 Token GetNextToken(char **input, int *line, int *column) {
 	// Ignore whitespace and track line/column numbers
@@ -150,6 +150,9 @@ Token GetNextToken(char **input, int *line, int *column) {
 		bool floatingPoint = false;
 		bool floatSuffix = false;
 		bool longSuffix = false;
+		bool longLongSuffix = false;
+		bool unsignedSuffix = false;
+		bool exponentPart = false;
 		int base = 10;
 
 		// Check for leading '-'
@@ -177,9 +180,11 @@ Token GetNextToken(char **input, int *line, int *column) {
 					(*column)++;
 				}
 			}
-			else RAISE_ERR("Invalid floating-point literal", *line, *column, input)
+			else {
+				RAISE_ERR("Invalid floating-point literal", *line, *column, *input);
+			}
 		}
-		else (**input == '0') { // Check for nondecimal literals
+		else if (**input == '0') { // Check for starting nondecimal literals
 			switch ((*input)[1]) {
 				case 'x':
 				case 'X':
@@ -216,7 +221,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 			}
 		}
 		else {
-			// Decimal part
+			// Starts with decimal part
 			while (isdigit(**input)) {
 				(*input)++;
 				(*column)++;
@@ -243,8 +248,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 				}
 			}
 			else {
-				fprintf(stderr, "Invalid floating-point literal at line %d, column %d\n", *line, *column);
-				exit(1);
+				RAISE_ERR("Invalid exponent in floating-point literal", *line, *column, *input);
 			}
 		}
 
@@ -258,8 +262,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 				(*column)++;
 			}
 			if (!isdigit(**input)) {
-				fprintf(stderr, "Invalid floating-point literal at line %d, column %d\n", *line, *column);
-				exit(1);
+				RAISE_ERR("Invalid exponent in hexadecimal floating-point literal", *line, *column, *input);
 			}
 			while (isdigit(**input)) {
 				(*input)++;
@@ -275,8 +278,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 				(*column)++;
 			}
 			if (!isdigit(**input)) {
-				fprintf(stderr, "Invalid hexadecimal floating-point literal at line %d, column %d\n", *line, *column);
-				exit(1);
+				RAISE_ERR("Invalid hexadecima floating-point literal", *line, *column, input);
 			}
 			while (isdigit(**input)) {
 				(*input)++;
@@ -284,24 +286,33 @@ Token GetNextToken(char **input, int *line, int *column) {
 			}
 		}
 
+		// Validate floating-point requirements
+		if (floatingPoint && base != 10 && base != 16) {
+			RAISE_ERR("Invalid floating-point literal", *line, *column, *input);
+		}
+		if (floatingPoint && base == 16 && !exponentPart) {
+			RAISE_ERR("Invalid hexadecimal floating-point literal requires exponent", *line, *column, *input);
+		}
+
 		// Check for suffix part
 		if (**input == 'f' || **input == 'F') {
+			if (!floatingPoint) {
+				RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
+			}
 			floatSuffix = true;
 			(*input)++;
 			(*column)++;
 		}
 		if (**input == 'l' || **input == 'L') {
 			if (floatSuffix) {
-				fprintf(stderr, "Invalid literal suffix 'fl' at line %d, column %d\n", *line, *column);
-				exit(1);
+				RAISE_ERR("Invalid literal suffix 'fl'", *line, *column, *input);
 			}
 			longSuffix = true;
 			(*input)++;
 			(*column)++;
 		}
 		if (floatSuffix && longSuffix) {
-			fprintf(stderr, "Invalid literal suffix 'lf' at line %d, column %d\n", *line, *column);
-			exit(1);
+			RAISE_ERR("Invalid literal suffix 'lf' for floating point", *line, *column, *input);
 		}
 
 		size_t length = *input - start;
@@ -528,7 +539,7 @@ bool TokenIsDataType(TokenQueue *q) {
 		case TOK_IMAGINARY:
 		case TOK_COMPLEX:
 		case TOK_STRING:
-		case TOK_LAMBDA
+		case TOK_LAMBDA:
 			return true;
 		default: return false;
 	}
@@ -618,7 +629,7 @@ bool TokenQueuePush(TokenQueue *q, Token token) {
 Token TokenQueuePop(TokenQueue *q) {
 	TokenNode *node;
 	Token token;
-	if (q->length == 0) return (Token) { TOK_EOF, NULL };
+	if (q->length == 0) return (Token) { TOK_EOF, NULL, 0, 0 };
 
 	node = q->first;
 	q->first = q->first->prev;
@@ -632,7 +643,7 @@ Token TokenQueuePop(TokenQueue *q) {
 	return token;
 }
 Token TokenQueuePeek(TokenQueue *q) {
-	if (q->length == 0) return (Token) { TOK_EOF, NULL };
+	if (q->length == 0) return (Token) { TOK_EOF, NULL, 0, 0 };
 
 	return q->first->token;
 }
