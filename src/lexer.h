@@ -7,6 +7,10 @@
 #include <ctype.h>
 #include <stdbool.h>
 
+#define RAISE_ERR(err, line, col, expr) \
+	fprintf(stderr, "%s at line %d, column %d.\n%s", err, line, col, expr); \
+	exit(EXIT_FAILURE); \
+
 typedef struct Token Token;
 typedef struct TokenNode TokenNode;
 typedef struct TokenQueue TokenQueue;
