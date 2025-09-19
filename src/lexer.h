@@ -24,10 +24,12 @@ typedef enum TokenType {
 	TOK_DOUBLE,
 	TOK_LONGDOUBLE,
 	TOK_LONG,
-	TOK_SHORT,
 	TOK_LONGLONG,
+	TOK_SHORT,
 	TOK_SIGNED,
-	TOK_UNSIGNED, 
+	TOK_UNSIGNED,
+	TOK_UNSIGNEDLONG,
+	TOK_UNSIGNEDLONGLONG,
 	TOK_BOOL,			// This is in C since C23
 	TOK_IMAGINARY,			// Imaginary type for complex numbers, e.g. 1.0i
 	TOK_COMPLEX,			// Complex type for complex numbers, e.g. 1.0 + 2.0i
@@ -42,20 +44,30 @@ typedef enum TokenType {
 	TOK_DOUBLEP,
 	TOK_LONGDOUBLEP,
 	TOK_LONGP,
-	TOK_SHORTP,
 	TOK_LONGLONGP,
+	TOK_SHORTP,
 	TOK_SIGNEDP,
 	TOK_UNSIGNEDP,
+	TOK_UNSIGNEDLONGP,
+	TOK_UNSIGNEDLONGLONGP,
+	//TOK_STRUCTP,			// Not sure if this have sense, like, a general struct pointer works when structs are user defined types?
 	TOK_BOOLP,			// Bool pointers lmao
 	TOK_STRINGP,			// String pointers
 	TOK_LAMBDAP,			// Pointer to lambda, which might or might not be just a function
 
 	// Literals
 	TOK_INTLIT,
-	TOK_CHARLIT,
 	TOK_FLOATLIT,
+	TOK_CHARLIT,
 	TOK_DOUBLELIT,
 	TOK_LONGDOUBLELIT,
+	TOK_LONGLIT,
+	TOK_LONGLONGLIT,
+	TOK_SHORTLIT,
+	TOK_SIGNEDLIT,
+	TOK_UNSIGNEDLIT,
+	TOK_UNSIGNEDLONGLIT,
+	TOK_UNSIGNEDLONGLONGLIT,
 	TOK_STRINGLIT,
 	TOK_FALSE, 			// Boolean false literal
 	TOK_TRUE,			// Boolean true literal

@@ -143,7 +143,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 	}
 
 	// Handle numeric literals
-	if ((isdigit(**input) || **input == '.' || **input == '-') &&
+	if ((isdigit(**input) || **input == '.') &&
 		(isdigit((*input)[1]) || (*input)[1] == '.' || (*input)[1] == 'x' || (*input)[1] == 'X' || (*input)[1] == 'b' || (*input)[1] == 'B')) {
 		char *start = *input;
 		int startColumn = *column;
@@ -278,7 +278,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 				(*column)++;
 			}
 			if (!isdigit(**input)) {
-				RAISE_ERR("Invalid hexadecima floating-point literal", *line, *column, input);
+				RAISE_ERR("Invalid hexadecima floating-point literal", *line, *column, *input);
 			}
 			while (isdigit(**input)) {
 				(*input)++;
@@ -295,51 +295,86 @@ Token GetNextToken(char **input, int *line, int *column) {
 		}
 
 		// Check for suffix part
-		if (**input == 'f' || **input == 'F') {
-			if (!floatingPoint) {
-				RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
+		while (**input == 'u' || **input == 'U' || **input == 'f' || **input == 'F' || **input == 'l' || **input == 'L') {
+			if (**input == 'u' || **input == 'U') {
+				if (floatingPoint) {
+					RAISE_ERR("Invalid literal suffix 'u' for floating point", *line, *column, *input);
+				}
+				else if (unsignedSuffix) {
+					RAISE_ERR("Duplicate unsigned suffix", *line, *column, *input);
+				}
+				else {
+					unsignedSuffix = true;
+					(*input)++;
+					(*column)++;
+				}
 			}
-			floatSuffix = true;
-			(*input)++;
-			(*column)++;
-		}
-		if (**input == 'l' || **input == 'L') {
-			if (floatSuffix) {
-				RAISE_ERR("Invalid literal suffix 'fl'", *line, *column, *input);
+			if (**input == 'f' || **input == 'F') {
+				if (!floatingPoint) {
+					RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
+				}
+				else if (floatSuffix) {
+					RAISE_ERR("Duplicate floating point suffix", *line, *column, *input);
+				}
+				else if (longSuffix) {
+					RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
+				}
+				else if (longLongSuffix) {
+					RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
+				}
+				floatSuffix = true;
+				(*input)++;
+				(*column)++;
 			}
-			longSuffix = true;
-			(*input)++;
-			(*column)++;
-		}
-		if (floatSuffix && longSuffix) {
-			RAISE_ERR("Invalid literal suffix 'lf' for floating point", *line, *column, *input);
+			if (**input == 'l' || **input == 'L') {
+				if (floatSuffix) {
+					RAISE_ERR("Invalid literal suffix 'l' for floating point", *line, *column, *input);
+				}
+				else if (longSuffix && !floatingPoint) {
+					longLongSuffix = true;
+					longSuffix = false;
+					(*input)++;
+					(*column)++;
+				}
+				else {
+					longSuffix = true;
+					(*input)++;
+					(*column)++;
+				}
+			}
 		}
 
 		size_t length = *input - start;
 		char *value = strndup(start, length);
 		TokenType type;
-		if (floatingPoint) {
-			if (floatSuffix) type = TOK_FLOATLIT;
-			else if (longSuffix) type = TOK_LONGDOUBLELIT;
-			else type = TOK_DOUBLELIT;
+		if (floatSuffix) type = TOK_FLOATLIT;
+		else if (floatingPoint && longSuffix) type = TOK_LONGDOUBLELIT;
+		else if (floatingPoint) type = TOK_DOUBLELIT;
+		else if (!unsignedSuffix && !longSuffix && !longLongSuffix) type = TOK_INTLIT;
+		else if (!unsignedSuffix && longSuffix && !longLongSuffix) type = TOK_LONGLIT;
+		else if (!unsignedSuffix && !longSuffix && longLongSuffix) type = TOK_LONGLONGLIT;
+		else if (unsignedSuffix && !longSuffix && !longLongSuffix) type = TOK_UNSIGNEDLIT;
+		else if (unsignedSuffix && longSuffix && !longLongSuffix) type = TOK_UNSIGNEDLONGLIT;
+		else if (unsignedSuffix && !longSuffix && longLongSuffix) type = TOK_UNSIGNEDLONGLONGLIT;
+		else {
+			RAISE_ERR("Invalid suffix combination", *line, *column, *input)
 		}
-		else type = TOK_INTLIT;
 
 		return (Token) { type, value, *line, startColumn };
 	}
 
 	// Handle singlecharacter tokens
 	switch (**input) {
-		case '(': (*input)++; (*column)++; return (Token) { TOK_OPENPARENTHESIS,	"(", *line, *column - 1 };
-		case ')': (*input)++; (*column)++; return (Token) { TOK_CLOSEPARENTHESIS,	")", *line, *column - 1 };
-		case '{': (*input)++; (*column)++; return (Token) { TOK_OPENCURLYBRACES,	"{", *line, *column - 1 };
-		case '}': (*input)++; (*column)++; return (Token) { TOK_CLOSECURLYBRACES,	"}", *line, *column - 1 };
+		case '(': (*input)++; (*column)++; return (Token) { TOK_OPENPARENTHESIS,		"(", *line, *column - 1 };
+		case ')': (*input)++; (*column)++; return (Token) { TOK_CLOSEPARENTHESIS,		")", *line, *column - 1 };
+		case '{': (*input)++; (*column)++; return (Token) { TOK_OPENCURLYBRACES,		"{", *line, *column - 1 };
+		case '}': (*input)++; (*column)++; return (Token) { TOK_CLOSECURLYBRACES,		"}", *line, *column - 1 };
 		case '[': (*input)++; (*column)++; return (Token) { TOK_OPENBRACKET,		"[", *line, *column - 1 };
 		case ']': (*input)++; (*column)++; return (Token) { TOK_CLOSEBRACKET,		"]", *line, *column - 1 };
 		case ';': (*input)++; (*column)++; return (Token) { TOK_SEMICOLON,		";", *line, *column - 1 };
 		case ',': (*input)++; (*column)++; return (Token) { TOK_COMMA,			",", *line, *column - 1 };
 		case ':': (*input)++; (*column)++; return (Token) { TOK_COLON,			":", *line, *column - 1 };
-		case '?': (*input)++; (*column)++; return (Token) { TOK_QUESTION,		"?", *line, *column - 1 };
+		case '?': (*input)++; (*column)++; return (Token) { TOK_QUESTION,			"?", *line, *column - 1 };
 		case '!': (*input)++; (*column)++; return (Token) { TOK_NOT,			"!", *line, *column - 1 };
 		case '&': (*input)++; (*column)++; return (Token) { TOK_BITAND,			"&", *line, *column - 1 };
 		case '|': (*input)++; (*column)++; return (Token) { TOK_BITOR,			"|", *line, *column - 1 };
@@ -350,7 +385,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 		case '-': (*input)++; (*column)++; return (Token) { TOK_MINUS,			"-", *line, *column - 1 };
 		case '*': (*input)++; (*column)++; return (Token) { TOK_STAR,			"*", *line, *column - 1 };
 		case '/': (*input)++; (*column)++; return (Token) { TOK_SLASH,			"/", *line, *column - 1 };
-		case '%': (*input)++; (*column)++; return (Token) { TOK_PERCENT,		"%", *line, *column - 1 };
+		case '%': (*input)++; (*column)++; return (Token) { TOK_PERCENT,			"%", *line, *column - 1 };
 		case '<': (*input)++; (*column)++; return (Token) { TOK_LESSERTHAN,		"<", *line, *column - 1 };
 		case '>': (*input)++; (*column)++; return (Token) { TOK_GREATERTHAN,		">", *line, *column - 1 };
 		case '.': (*input)++; (*column)++; return (Token) { TOK_DOT,			".", *line, *column - 1 };
@@ -384,15 +419,19 @@ bool TokenPrint(Token token) {
 					"TOK_CHAR",
 					"TOK_VOID",
 					"TOK_DOUBLE",
-					"TOK_SHORT",
+					"TOK_LONGDOUBLE",
 					"TOK_LONG",
+					"TOK_LONGLONG",
+					"TOK_SHORT",
 					"TOK_SIGNED",
 					"TOK_UNSIGNED",
-					"TOK_BOOL",
-					"TOK_IMAGINARY",
-					"TOK_COMPLEX",
-					"TOK_STRING",
-					"TOK_LAMBDA",
+					"TOK_UNSIGNEDLONG",
+					"TOK_UNSIGNEDLONGLONG",
+					"TOK_BOOL",			// This is in C since C23
+					"TOK_IMAGINARY",			// Imaginary type for complex numbers, e.g. 1.0i
+					"TOK_COMPLEX",			// Complex type for complex numbers, e.g. 1.0 + 2.0i
+					"TOK_STRING",			// String type, not in C, but necessary in Czy
+					"TOK_LAMBDA",			// For lambda expressions, all behave like closures
 					// Pointer types
 					"TOK_INTP",
 					"TOK_FLOATP",
@@ -401,23 +440,32 @@ bool TokenPrint(Token token) {
 					"TOK_DOUBLEP",
 					"TOK_LONGDOUBLEP",
 					"TOK_LONGP",
-					"TOK_SHORTP",
 					"TOK_LONGLONGP",
+					"TOK_SHORTP",
 					"TOK_SIGNEDP",
 					"TOK_UNSIGNEDP",
-					"TOK_BOOLP",
-					"TOK_STRINGP",
-					"TOK_LAMBDAP",
+					"TOK_UNSIGNEDLONGP",
+					"TOK_UNSIGNEDLONGLONGP",
+					"TOK_BOOLP",			// Bool pointers lmao
+					"TOK_STRINGP",			// String pointers
+					"TOK_LAMBDAP",			// Pointer to lambda, which might or might not be just a function
 					// Literals
 					"TOK_INTLIT",
-					"TOK_CHARLIT",
 					"TOK_FLOATLIT",
+					"TOK_CHARLIT",
 					"TOK_DOUBLELIT",
 					"TOK_LONGDOUBLELIT",
+					"TOK_LONGLIT",
+					"TOK_LONGLONGLIT",
+					"TOK_SHORTLIT",
+					"TOK_SIGNEDLIT",
+					"TOK_UNSIGNEDLIT",
+					"TOK_UNSIGNEDLONGLIT",
+					"TOK_UNSIGNEDLONGLONGLIT",
 					"TOK_STRINGLIT",
-					"TOK_FALSE",
-					"TOK_TRUE",
-					"TOK_NULLPTR",
+					"TOK_FALSE", 			// Boolean false literal
+					"TOK_TRUE",			// Boolean true literal
+					"TOK_NULLPTR",			// Null pointer literal
 					// Storage Class Specifiers
 					"TOK_EXTERN",
 					"TOK_STATIC",
