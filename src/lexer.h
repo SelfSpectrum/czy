@@ -7,8 +7,8 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define RAISE_ERR(err, line, col, expr) \
-	fprintf(stderr, "%s at line %d, column %d.\n%s", err, line, col, expr); \
+#define RAISE_ERR(err, line, column, expr) \
+	fprintf(stderr, "%s at line %d, column %d.\n%s", err, line, column, expr); \
 	exit(EXIT_FAILURE);
 
 typedef struct Token Token;
@@ -34,7 +34,7 @@ typedef enum TokenType {
 	TOK_IMAGINARY,			// Imaginary type for complex numbers, e.g. 1.0i
 	TOK_COMPLEX,			// Complex type for complex numbers, e.g. 1.0 + 2.0i
 	TOK_STRING,			// String type, not in C, but necessary in Czy
-	TOK_LAMBDA,			// For lambda expressions, all behave like closures
+	TOK_LAMBDA,			// For lambda expressions
 
 	// Pointer types
 	TOK_INTP,

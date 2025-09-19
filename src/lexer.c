@@ -57,6 +57,7 @@ TokenType TokenTypeParseString(const char *str) {
 	if (strcmp(str, "match") == 0)		return TOK_MATCH;
 	return TOK_ID;
 }
+
 Token GetNextToken(char **input, int *line, int *column) {
 	// Ignore whitespace and track line/column numbers
 	while (isspace(**input)) {
@@ -142,128 +143,91 @@ Token GetNextToken(char **input, int *line, int *column) {
 		return (Token) { TOK_RSHIFT, ">>", *line, *column - 1 };
 	}
 
+
 	// Handle numeric literals
-	if ((isdigit(**input) || **input == '.') &&
-		(isdigit((*input)[1]) || (*input)[1] == '.' || (*input)[1] == 'x' || (*input)[1] == 'X' || (*input)[1] == 'b' || (*input)[1] == 'B')) {
+	if (isdigit(**input) || **input == '.') {
 		char *start = *input;
 		int startColumn = *column;
+
 		bool floatingPoint = false;
-		bool floatSuffix = false;
-		bool longSuffix = false;
-		bool longLongSuffix = false;
-		bool unsignedSuffix = false;
-		bool exponentPart = false;
+		bool hasExponent = false;
 		int base = 10;
 
-		// Check for leading '-'
-		if (**input == '-') {
-			(*input)++;
-			(*column)++;
-		}
-
-		// Check for fractional part starting with '.'
-		if (**input == '.') {
-			floatingPoint = true;
-			(*input)++;
-			(*column)++;
-			if (base == 10) {
-				// Decimal floating point
-				while (isdigit(**input)) {
-					(*input)++;
-					(*column)++;
-				}
-			}
-			else if (base == 16) {
-				// Hexadecimal floating point
-				while (isxdigit(**input)) {
-					(*input)++;
-					(*column)++;
-				}
+		// Check for hexadecimal or binary prefix
+		if (**input == '0' && ((*input)[1] == 'x' || (*input)[1] == 'X' || (*input)[1] == 'b' || (*input)[1] == 'B')) {
+			if ((*input)[1] == 'x' || (*input)[1] == 'X') {
+				base = 16;
+				*input += 2;
+				*column += 2;
 			}
 			else {
-				RAISE_ERR("Invalid floating-point literal", *line, *column, *input);
+				base = 2;
+				*input += 2;
+				*column += 2;
 			}
 		}
-		else if (**input == '0') { // Check for starting nondecimal literals
-			switch ((*input)[1]) {
-				case 'x':
-				case 'X':
-					// Hexadecimal part
-					base = 16;
-					(*input) += 2;
-					(*column) += 2;
-					while (isxdigit(**input)) {
-						(*input)++;
-						(*column)++;
-					}
-					break;
-				case 'b':
-				case 'B':
-					// Binary part
-					base = 2;
-					(*input) += 2;
-					(*column) += 2;
-					while (**input == '0' || **input == '1') {
-						(*input)++;
-						(*column)++;
-					}
-					break;
-				default:
-					// Octal part
-					base = 8;
-					(*input)++;
-					(*column)++;
-					while (**input >= '0' && **input <= '7') {
-						(*input)++;
-						(*column)++;
-					}
-					break;
+
+		// Parse integer part (if any)
+		if (base == 2) {
+			while (**input == '0' || **input == '1') {
+				(*input)++;
+				(*column)++;
 			}
 		}
-		else {
-			// Starts with decimal part
+		else if (base == 10) {
 			while (isdigit(**input)) {
 				(*input)++;
 				(*column)++;
 			}
 		}
+		else if (base == 16) {
+			while (isxdigit(**input)) {
+				(*input)++;
+				(*column)++;
+			}
+		}
 
-		// Check for floating point
+		// Check for fractional part
 		if (**input == '.') {
 			floatingPoint = true;
 			(*input)++;
 			(*column)++;
-			if (base == 10) {
-				// Decimal floating point
+
+			// Parse fractional digits
+			if (base == 2) {
+				while (**input == '0' || **input == '1') {
+					(*input)++;
+					(*column)++;
+				}
+			} else if (base == 10) {
 				while (isdigit(**input)) {
 					(*input)++;
 					(*column)++;
 				}
-			}
-			else if (base == 16) {
-				// Hexadecimal floating point
+			} else if (base == 16) {
 				while (isxdigit(**input)) {
 					(*input)++;
 					(*column)++;
 				}
 			}
-			else {
-				RAISE_ERR("Invalid exponent in floating-point literal", *line, *column, *input);
-			}
 		}
 
 		// Check for exponent part
-		if (base == 10 && ( **input == 'e' || **input == 'E')) {
+		if (base == 10 && (**input == 'e' || **input == 'E')) {
 			floatingPoint = true;
+			hasExponent = true;
 			(*input)++;
 			(*column)++;
+
 			if (**input == '+' || **input == '-') {
 				(*input)++;
 				(*column)++;
 			}
+
 			if (!isdigit(**input)) {
-				RAISE_ERR("Invalid exponent in hexadecimal floating-point literal", *line, *column, *input);
+				RAISE_ERR("Invalid exponent in floating-point literal", *line, *column, *input);
 			}
+
 			while (isdigit(**input)) {
 				(*input)++;
 				(*column)++;
@@ -271,15 +235,19 @@ Token GetNextToken(char **input, int *line, int *column) {
 		}
 		else if (base == 16 && (**input == 'p' || **input == 'P')) {
 			floatingPoint = true;
+			hasExponent = true;
 			(*input)++;
 			(*column)++;
+
 			if (**input == '+' || **input == '-') {
 				(*input)++;
 				(*column)++;
 			}
+
 			if (!isdigit(**input)) {
-				RAISE_ERR("Invalid hexadecima floating-point literal", *line, *column, *input);
+				RAISE_ERR("Invalid exponent in hexadecimal floating-point literal", *line, *column, *input);
 			}
+
 			while (isdigit(**input)) {
 				(*input)++;
 				(*column)++;
@@ -290,74 +258,84 @@ Token GetNextToken(char **input, int *line, int *column) {
 		if (floatingPoint && base != 10 && base != 16) {
 			RAISE_ERR("Invalid floating-point literal", *line, *column, *input);
 		}
-		if (floatingPoint && base == 16 && !exponentPart) {
-			RAISE_ERR("Invalid hexadecimal floating-point literal requires exponent", *line, *column, *input);
+
+		if (floatingPoint && base == 16 && !hasExponent) {
+			RAISE_ERR("Hexadecimal floating-point literal requires exponent", *line, *column, *input);
 		}
 
-		// Check for suffix part
-		while (**input == 'u' || **input == 'U' || **input == 'f' || **input == 'F' || **input == 'l' || **input == 'L') {
+		// Parse suffixes
+		bool unsignedSuffix = false;
+		bool longSuffix = false;
+		bool longLongSuffix = false;
+		bool floatSuffix = false;
+
+		while (**input == 'u' || **input == 'U' || **input == 'l' || **input == 'L' || **input == 'f' || **input == 'F') {
 			if (**input == 'u' || **input == 'U') {
 				if (floatingPoint) {
-					RAISE_ERR("Invalid literal suffix 'u' for floating point", *line, *column, *input);
+					RAISE_ERR("Invalid suffix 'u' for floating-point literal", *line, *column, *input);
 				}
-				else if (unsignedSuffix) {
-					RAISE_ERR("Duplicate unsigned suffix", *line, *column, *input);
+				if (unsignedSuffix) {
+					RAISE_ERR("Duplicate 'u' suffix", *line, *column, *input);
 				}
-				else {
-					unsignedSuffix = true;
-					(*input)++;
-					(*column)++;
-				}
+				unsignedSuffix = true;
 			}
-			if (**input == 'f' || **input == 'F') {
-				if (!floatingPoint) {
-					RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
+			else if (**input == 'l' || **input == 'L') {
+				if (floatingPoint) {
+					RAISE_ERR("Invalid suffix 'l' for floating-point literal", *line, *column, *input);
 				}
-				else if (floatSuffix) {
-					RAISE_ERR("Duplicate floating point suffix", *line, *column, *input);
+				if (longLongSuffix) {
+					RAISE_ERR("Too many 'l' suffixes", *line, *column, *input);
 				}
-				else if (longSuffix) {
-					RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
-				}
-				else if (longLongSuffix) {
-					RAISE_ERR("Invalid literal suffix 'f' for non-floating point", *line, *column, *input);
-				}
-				floatSuffix = true;
-				(*input)++;
-				(*column)++;
-			}
-			if (**input == 'l' || **input == 'L') {
-				if (floatSuffix) {
-					RAISE_ERR("Invalid literal suffix 'l' for floating point", *line, *column, *input);
-				}
-				else if (longSuffix && !floatingPoint) {
-					longLongSuffix = true;
+				if (longSuffix) {
 					longSuffix = false;
-					(*input)++;
-					(*column)++;
+					longLongSuffix = true;
 				}
 				else {
 					longSuffix = true;
-					(*input)++;
-					(*column)++;
 				}
 			}
+			else if (**input == 'f' || **input == 'F') {
+				if (!floatingPoint) {
+					RAISE_ERR("Invalid suffix 'f' for integer literal", *line, *column, *input);
+				}
+				if (floatSuffix) {
+					RAISE_ERR("Duplicate 'f' suffix", *line, *column, *input);
+				}
+				floatSuffix = true;
+			}
+			(*input)++;
+			(*column)++;
 		}
 
+		// Determine token type
 		size_t length = *input - start;
 		char *value = strndup(start, length);
 		TokenType type;
-		if (floatSuffix) type = TOK_FLOATLIT;
-		else if (floatingPoint && longSuffix) type = TOK_LONGDOUBLELIT;
-		else if (floatingPoint) type = TOK_DOUBLELIT;
-		else if (!unsignedSuffix && !longSuffix && !longLongSuffix) type = TOK_INTLIT;
-		else if (!unsignedSuffix && longSuffix && !longLongSuffix) type = TOK_LONGLIT;
-		else if (!unsignedSuffix && !longSuffix && longLongSuffix) type = TOK_LONGLONGLIT;
-		else if (unsignedSuffix && !longSuffix && !longLongSuffix) type = TOK_UNSIGNEDLIT;
-		else if (unsignedSuffix && longSuffix && !longLongSuffix) type = TOK_UNSIGNEDLONGLIT;
-		else if (unsignedSuffix && !longSuffix && longLongSuffix) type = TOK_UNSIGNEDLONGLONGLIT;
+
+		if (floatingPoint) {
+			if (floatSuffix) {
+				type = TOK_FLOATLIT;
+			}
+			else if (longSuffix) {
+				type = TOK_LONGDOUBLELIT;
+			}
+			else {
+				type = TOK_DOUBLELIT;
+			}
+		}
 		else {
-			RAISE_ERR("Invalid suffix combination", *line, *column, *input)
+			if (longLongSuffix) {
+				type = unsignedSuffix ? TOK_UNSIGNEDLONGLONGLIT : TOK_LONGLONGLIT;
+			}
+			else if (longSuffix) {
+				type = unsignedSuffix ? TOK_UNSIGNEDLONGLIT : TOK_LONGLIT;
+			}
+			else if (unsignedSuffix) {
+				type = TOK_UNSIGNEDLIT;
+			}
+			else {
+				type = TOK_INTLIT;
+			}
 		}
 
 		return (Token) { type, value, *line, startColumn };
