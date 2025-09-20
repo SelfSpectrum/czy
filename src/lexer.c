@@ -58,7 +58,7 @@ TokenType TokenTypeParseString(const char *str) {
 	return TOK_ID;
 }
 
-Token GetNextToken(char **input, int *line, int *column) {
+Token GetNextToken(CompilerState *state, char **input, int *line, int *column) {
 	// Ignore whitespace and track line/column numbers
 	while (isspace(**input)) {
 		if (**input == '\n') {
@@ -74,7 +74,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 	if (**input == '/' && (*input)[1] == '/') {
 		// Ignore until end of line, then return recursively
 		while (**input != '\n' && **input != '\0') (*input)++;
-		return GetNextToken(input, line, column);
+		return GetNextToken(state, input, line, column);
 	}
 	// Handle multiline comments
 	if (**input == '/' && (*input)[1] == '*') {
@@ -94,7 +94,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 			return (Token) { .type = TOK_ERROR, .value = NULL, .line = *line, .column = *column };
 		}
 		(*input) += 2;
-		return GetNextToken(input, line, column);
+		return GetNextToken(state, input, line, column);
 	}
 
 	// Handle multicharacter operators
@@ -225,7 +225,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 			}
 
 			if (!isdigit(**input)) {
-				RAISE_ERR("Invalid exponent in floating-point literal", *line, *column, *input);
+				ERROR_AT(state, *line, *column, *input, "Invalid exponent in floating-point literal");
 			}
 
 			while (isdigit(**input)) {
@@ -245,7 +245,7 @@ Token GetNextToken(char **input, int *line, int *column) {
 			}
 
 			if (!isdigit(**input)) {
-				RAISE_ERR("Invalid exponent in hexadecimal floating-point literal", *line, *column, *input);
+				ERROR_AT(state, *line, *column, *input, "Invalid exponent in hexadecimal floating-point literal");
 			}
 
 			while (isdigit(**input)) {
@@ -256,11 +256,11 @@ Token GetNextToken(char **input, int *line, int *column) {
 
 		// Validate floating-point requirements
 		if (floatingPoint && base != 10 && base != 16) {
-			RAISE_ERR("Invalid floating-point literal", *line, *column, *input);
+			ERROR_AT(state, *line, *column, *input, "Invalid floating-point literal");
 		}
 
 		if (floatingPoint && base == 16 && !hasExponent) {
-			RAISE_ERR("Hexadecimal floating-point literal requires exponent", *line, *column, *input);
+			ERROR_AT(state, *line, *column, *input, "Hexadecimal floating-point literal requires exponent");
 		}
 
 		// Parse suffixes
@@ -272,19 +272,19 @@ Token GetNextToken(char **input, int *line, int *column) {
 		while (**input == 'u' || **input == 'U' || **input == 'l' || **input == 'L' || **input == 'f' || **input == 'F') {
 			if (**input == 'u' || **input == 'U') {
 				if (floatingPoint) {
-					RAISE_ERR("Invalid suffix 'u' for floating-point literal", *line, *column, *input);
+					ERROR_AT(state, *line, *column, *input, "Invalid suffix 'u' for floating-point literal");
 				}
 				if (unsignedSuffix) {
-					RAISE_ERR("Duplicate 'u' suffix", *line, *column, *input);
+					ERROR_AT(state, *line, *column, *input, "Duplicate 'u' suffix");
 				}
 				unsignedSuffix = true;
 			}
 			else if (**input == 'l' || **input == 'L') {
 				if (floatingPoint) {
-					RAISE_ERR("Invalid suffix 'l' for floating-point literal", *line, *column, *input);
+					ERROR_AT(state, *line, *column, *input, "Invalid suffix 'l' for floating-point literal");
 				}
 				if (longLongSuffix) {
-					RAISE_ERR("Too many 'l' suffixes", *line, *column, *input);
+					ERROR_AT(state, *line, *column, *input, "Too many 'l' suffixes");
 				}
 				if (longSuffix) {
 					longSuffix = false;
@@ -296,10 +296,10 @@ Token GetNextToken(char **input, int *line, int *column) {
 			}
 			else if (**input == 'f' || **input == 'F') {
 				if (!floatingPoint) {
-					RAISE_ERR("Invalid suffix 'f' for integer literal", *line, *column, *input);
+					ERROR_AT(state, *line, *column, *input, "Invalid suffix 'f' for integer literal");
 				}
 				if (floatSuffix) {
-					RAISE_ERR("Duplicate 'f' suffix", *line, *column, *input);
+					ERROR_AT(state, *line, *column, *input, "Duplicate 'f' suffix");
 				}
 				floatSuffix = true;
 			}

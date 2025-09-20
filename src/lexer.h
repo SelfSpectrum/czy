@@ -1,15 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdbool.h>
-
-#define RAISE_ERR(err, line, column, expr) \
-	fprintf(stderr, "%s at line %d, column %d.\n%s", err, line, column, expr); \
-	exit(EXIT_FAILURE);
+#include "czy.h"
 
 typedef struct Token Token;
 typedef struct TokenNode TokenNode;
@@ -194,7 +186,7 @@ struct TokenQueue {
 
 // Function prototypes
 TokenType TokenTypeParseString(const char *str);
-Token GetNextToken(char **input, int *line, int *column);
+Token GetNextToken(CompilerState *state, char **input, int *line, int *column);
 bool TokenPrint(Token token);
 bool TokenFree(Token *token);
 bool TokenExpect(TokenQueue *q, TokenType type);

@@ -4,11 +4,10 @@
 #include "lexer.h"
 
 typedef struct ASTNode ASTNode;
-typedef enum NodeType NodeType;
 typedef struct ASTNodeNode ASTNodeNode;
 typedef struct ASTQueue ASTQueue;
 
-enum NodeType{
+typedef enum NodeType{
 	AST_EXPRESSION = 0,
 	AST_SCOPE,
 	AST_RETURN,
@@ -21,7 +20,7 @@ enum NodeType{
 	AST_BINARYOP,
 	AST_UNARYOP,
 	AST_ERROR
-};
+} NodeType;
 struct ASTNode{
 	NodeType type;
 	union {
